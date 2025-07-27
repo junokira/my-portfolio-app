@@ -985,7 +985,15 @@ export default function Portfolio() {
       <div className="flex h-screen">
         {/* Mobile Header (visible on small screens) */}
         <div className="md:hidden fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-md border-b border-white/10 p-4 flex items-center justify-between z-20">
-          <h1 className="text-xl font-semibold">Calvin Korkie</h1>
+          {/* Profile picture and name for mobile header */}
+          <div className="flex items-center gap-2">
+            <img
+              src="https://i.ibb.co/kVZjJf5Y/photo-of-meeee.webp"
+              alt="Calvin Korkie"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <h1 className="text-xl font-semibold">Calvin Korkie</h1>
+          </div>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 rounded-md hover:bg-white/10">
             <Menu className="w-6 h-6 text-white" />
           </button>
@@ -1038,9 +1046,31 @@ export default function Portfolio() {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="fixed inset-0 bg-black/90 backdrop-blur-lg z-30 flex flex-col p-6 md:hidden"
             >
+              {/* Profile info at the top of the mobile menu */}
+              <div className="flex flex-col items-center space-y-2 mb-8">
+                <motion.div
+                  className="relative rounded-full border-2 border-transparent"
+                  whileHover={{
+                    borderColor: "rgba(255, 255, 255, 0.5)",
+                    boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
+                    scale: 1.05,
+                  }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <img
+                    src="https://i.ibb.co/kVZjJf5Y/photo-of-meeee.webp"
+                    alt="Calvin Korkie"
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                </motion.div>
+                <h1 className="text-xl font-semibold text-center">Calvin Korkie</h1>
+                <p className="text-xs text-gray-400">anticalvin@icloud.com</p>
+                <p className="text-xs text-gray-400">Cape Town, South Africa</p>
+              </div>
+
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold">Navigation</h2>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-md hover:bg-white/10">
+                {/* Removed "Navigation" text as profile info now serves as header */}
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-md hover:bg-white/10 absolute top-4 right-4">
                   <X className="w-6 h-6 text-white" />
                 </button>
               </div>
