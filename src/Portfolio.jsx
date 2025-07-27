@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";
-import { PenTool, LayoutGrid, Globe, Search, Code, ChevronRight, ChevronDown, X } from "lucide-react"; // Import X icon for close button
+import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresence for exit animations
+import { PenTool, LayoutGrid, Globe, Search, Code, ChevronRight, ChevronDown, X, TrendingUp, Link, FileText, BarChart2, Monitor, Users, Menu } from "lucide-react"; // Import Menu icon for mobile navigation
 
 /**
  * CursorFollower Component
@@ -19,7 +19,7 @@ const CursorFollower = () => {
 
       // Calculate distance moved
       const dx = e.clientX - lastMousePosition.current.x;
-      const dy = e.clientY - lastMousePosition.current.y;
+      const dy = e.clientY - lastMousePosition.current.y; 
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       // Calculate speed (pixels per millisecond)
@@ -347,35 +347,28 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-8"
-      style={{ border: 'none', outline: 'none' }}
       onClick={onClose} // Close when clicking outside the image
     >
-      {/* Outer wrapper with border */}
+      {/* Main image container with the desired border and shadow */}
       <div 
-        className="relative max-w-2xl max-h-[80vh] border-l-2 border-t-2 border-r-2 border-gray-600" 
-        style={{ borderBottom: 'none', outline: 'none' }}
-        onClick={(e) => e.stopPropagation()}
+        className="relative max-w-2xl max-h-[80vh] w-full h-full bg-white/10 shadow-2xl rounded-xl border-2 border-gray-600" // Combined borders and shadow here
+        style={{ outline: 'none' }} // Ensure no outline
+        onClick={(e) => e.stopPropagation()} // Prevent click from propagating to overlay
       >
-        {/* Inner content container */}
-        <div 
-          className="relative w-full h-full bg-white/10 shadow-2xl rounded-xl"
-          style={{ border: 'none', outline: 'none' }}
-        >
-          <div className="relative w-full h-full p-6">
-            <button
-              onClick={onClose}
-              className="absolute top-0 right-0 w-10 h-10 bg-red-600 hover:bg-red-700 text-white transition-all duration-200 z-10 rounded-full flex items-center justify-center shadow-lg border border-red-400"
-              aria-label="Close image"
-            >
-              <X size={18} />
-            </button>
-            <img
-              src={imageUrl}
-              alt="Large view"
-              className="w-full h-full object-contain"
-              style={{ border: 'none', outline: 'none' }}
-            />
-          </div>
+        <div className="relative w-full h-full p-6">
+          <button
+            onClick={onClose}
+            className="absolute top-0 right-0 w-10 h-10 bg-red-600 hover:bg-red-700 text-white transition-all duration-200 z-10 rounded-full flex items-center justify-center shadow-lg border border-red-400"
+            aria-label="Close image"
+          >
+            <X size={18} />
+          </button>
+          <img
+            src={imageUrl}
+            alt="Large view"
+            className="w-full h-full object-contain rounded-xl" // Added rounded-xl here
+            style={{ border: 'none', outline: 'none' }} // Ensure image itself has no border/outline
+          />
         </div>
       </div>
     </motion.div>
@@ -415,6 +408,39 @@ const SkillCard = ({ skill }) => {
     </motion.div>
   );
 };
+
+/**
+ * ProjectCard Component
+ * Displays a single project with its image, title, and description,
+ * mimicking the style of the "Spaces" widgets.
+ */
+const ProjectCard = ({ project }) => {
+  return (
+    <motion.div
+      className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-4 space-y-2 flex flex-col justify-between"
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-white text-lg font-semibold">{project.name}</h3>
+          <p className="text-gray-400 text-sm">{project.category}</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-white/50" />
+      </div>
+      {/* Project Image/Visual Area - mimicking the inner containers of Spaces */}
+      <div className="rounded-xl overflow-hidden bg-white/10 mt-2 p-3 flex items-center justify-center h-24">
+        <img
+          src={project.imageUrl}
+          alt={project.name}
+          className="w-full h-full object-contain p-1" // object-contain and p-1 for fit and buffer
+        />
+      </div>
+      <p className="text-gray-400 text-sm">{project.description}</p>
+    </motion.div>
+  );
+};
+
 
 /**
  * ExperienceItem Component
@@ -500,6 +526,52 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     },
   ];
 
+  // Data for Projects section, now with more details for the new card style
+  const projects = [
+    {
+      name: "Kwality & Klarity",
+      category: "Brand & Web Design",
+      description: "Crafting a unique brand identity and responsive web presence for a consulting firm.",
+      imageUrl: "https://placehold.co/150x100/34D399/FFFFFF?text=K&K", // Example placeholder
+    },
+    {
+      name: "AWAKEN",
+      category: "AI Art Installation",
+      description: "An immersive AI-driven art experience exploring consciousness and perception.",
+      imageUrl: "https://placehold.co/150x100/60A5FA/FFFFFF?text=AWAKEN", // Example placeholder
+    },
+    {
+      name: "v0id",
+      category: "AI Research & Development",
+      description: "Core R&D for synthetic minds and generative AI applications.",
+      imageUrl: "https://i.ibb.co/p7297MR/vo0id-logo.png", // Using an existing logo
+    },
+    {
+      name: "Kopoai",
+      category: "Fintech Platform UI",
+      description: "Designing intuitive user interfaces for a cutting-edge financial technology platform.",
+      imageUrl: "https://placehold.co/150x100/EC4899/FFFFFF?text=Kopoai", // Example placeholder
+    },
+    {
+      name: "Horizon",
+      category: "Mobile App Development",
+      description: "Developing a cross-platform mobile application for outdoor enthusiasts.",
+      imageUrl: "https://placehold.co/150x100/F59E0B/FFFFFF?text=Horizon", // Example placeholder
+    },
+    {
+      name: "OnTheWall",
+      category: "E-commerce & UX",
+      description: "Optimizing the user experience and visual design for an online art marketplace.",
+      imageUrl: "https://placehold.co/150x100/10B981/FFFFFF?text=OnTheWall", // Example placeholder
+    },
+    {
+      name: "Vaulted",
+      category: "Security Software UI",
+      description: "Creating a secure and user-friendly interface for data encryption software.",
+      imageUrl: "https://placehold.co/150x100/EF4444/FFFFFF?text=Vaulted", // Example placeholder
+    },
+  ];
+
 
   return (
     <div className="space-y-20">
@@ -515,7 +587,7 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
       {/* Spaces Section, including the ExpandablePhotosWidget */}
       <section>
         <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Spaces</h2>
-        <div className="grid grid-cols-2 gap-6 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"> {/* Changed to grid-cols-1 on mobile */}
           {/* Pass the centralized state and setter to both widgets */}
           <ExpandablePhotosWidget
             isExpanded={isLinkedWidgetsExpanded}
@@ -541,27 +613,16 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
         </div>
       </section>
 
-      {/* Projects Section */}
+      {/* Projects Section - Now using ProjectCard component and grid layout */}
       <section>
         <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Projects</h2>
         <p className="text-gray-400 leading-relaxed text-lg">
           From brand systems and marketing funnels to advanced AI tools and web platforms, my portfolio spans industries and mediums.
           Notable projects include Kwality & Klarity, AWAKEN, v0id, Kopoai, Horizon, OnTheWall, and Vaulted.
         </p>
-        <div className="mt-8 grid grid-cols-1 gap-4">
-          {["Kwality & Klarity", "AWAKEN", "v0id", "Kopoai", "Horizon", "OnTheWall", "Vaulted"].map((proj, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.02 }} // Hover animation for project cards
-              className="transition flex items-center gap-4 border border-white/10 rounded-xl p-4 bg-white/5 backdrop-blur-md"
-            >
-              {/* Placeholder image for project logos */}
-              <img src="https://placehold.co/48x48/1a1a1a/ffffff?text=Logo" alt="Project Logo" className="w-12 h-12 object-cover rounded-xl bg-white/10" />
-              <div>
-                <h3 className="text-xl font-medium">{proj}</h3>
-                <p className="text-gray-400 text-sm mt-1">Brief highlight or hover effect here</p>
-              </div>
-            </motion.div>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Changed to grid-cols-1 on mobile */}
+          {projects.map((proj, i) => (
+            <ProjectCard key={i} project={proj} />
           ))}
         </div>
       </section>
@@ -614,7 +675,7 @@ const GraphicDesignContent = () => (
           <li>Developed unique visual themes for each poster in the series.</li>
           <li>Incorporated abstract elements to represent technological advancement.</li>
           <li>Optimized for both digital and print media.</li>
-        </ul>
+          </ul>
         <p className="text-gray-500 text-xs mt-4">Tools: Adobe Photoshop, Adobe Illustrator</p>
       </div>
 
@@ -709,48 +770,80 @@ const DigitalMarketingContent = () => (
   </section>
 );
 
-const SEOContent = () => (
-  <section>
-    <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">SEO Strategies & Results</h2>
-    <p className="text-gray-400 leading-relaxed text-lg mb-8">
-      My approach to Search Engine Optimization is rooted in a deep understanding of algorithms, user intent, and technical best practices. I develop comprehensive SEO strategies that boost organic visibility, drive qualified traffic, and improve search rankings for sustainable long-term growth.
-    </p>
+const SEOContent = () => {
+  // Data for SEO Services with Lucide React Icons
+  const seoServices = [
+    { name: "Keyword Research", icon: <Search className="w-8 h-8 text-white" /> },
+    { name: "On-Page SEO", icon: <FileText className="w-8 h-8 text-white" /> },
+    { name: "Off-Page SEO", icon: <Link className="w-8 h-8 text-white" /> },
+    { name: "Technical SEO", icon: <Code className="w-8 h-8 text-white" /> },
+    { name: "Local SEO", icon: <Globe className="w-8 h-8 text-white" /> },
+    { name: "Analytics & Reporting", icon: <BarChart2 className="w-8 h-8 text-white" /> },
+    { name: "Content Strategy", icon: <Monitor className="w-8 h-8 text-white" /> },
+    { name: "Competitor Analysis", icon: <Users className="w-8 h-8 text-white" /> },
+  ];
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      {/* Case Study 1: E-commerce Organic Traffic Growth */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-        <h3 className="text-xl font-semibold text-white mb-2">Case Study: E-commerce Organic Traffic Surge</h3>
-        <p className="text-gray-400 text-sm mb-4">
-          **Challenge:** A niche e-commerce site struggled with low organic traffic despite having unique products.
-        </p>
-        <img src="https://placehold.co/400x250/3B82F6/FFFFFF?text=SEO+Traffic+Graph" alt="SEO Traffic Graph" className="w-full h-auto rounded-lg mb-4" />
-        <ul className="list-disc list-inside text-gray-400 text-sm space-y-1">
-          <li>Conducted extensive keyword research to identify high-potential long-tail keywords.</li>
-          <li>Optimized product pages and category descriptions for target keywords.</li>
-          <li>Implemented technical SEO fixes (site speed, mobile responsiveness, schema markup).</li>
-          <li>**Results:** Achieved a 70% increase in organic traffic and a 25% improvement in keyword rankings for top terms within 6 months.</li>
-        </ul>
-        <p className="text-gray-500 text-xs mt-4">Tools: Google Search Console, SEMrush, Screaming Frog</p>
+  return (
+    <section>
+      <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">SEO Strategies & Results</h2>
+      <p className="text-gray-400 leading-relaxed text-lg mb-8">
+        My approach to Search Engine Optimization is rooted in a deep understanding of algorithms, user intent, and technical best practices. I develop comprehensive SEO strategies that boost organic visibility, drive qualified traffic, and improve search rankings for sustainable long-term growth.
+      </p>
+
+      {/* New section for SEO Services */}
+      <div className="mb-12">
+        <h3 className="text-2xl font-semibold mb-6 text-white">Key SEO Services</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+          {seoServices.map((service, i) => (
+            <motion.div
+              key={i}
+              className="rounded-xl bg-white/5 border border-white/10 p-4 flex flex-col items-center justify-center text-center space-y-2"
+              whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
+              transition={{ duration: 0.2 }}
+            >
+              {service.icon}
+              <p className="text-white text-md font-medium">{service.name}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
-      {/* Case Study 2: Local Business SEO Domination */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-        <h3 className="text-xl font-semibold text-white mb-2">Case Study: Local Service Business Ranking Boost</h3>
-        <p className="text-gray-400 text-sm mb-4">
-          **Challenge:** A local service provider had minimal online presence and was losing customers to competitors.
-        </p>
-        <img src="https://placehold.co/400x250/8B5CF6/FFFFFF?text=Local+SEO" alt="Local SEO Map" className="w-full h-auto rounded-lg mb-4" />
-        <ul className="list-disc list-inside text-gray-400 text-sm space-y-1">
-          <li>Optimized Google My Business profile and local citations.</li>
-          <li>Developed location-specific landing pages with optimized content.</li>
-          <li>Implemented local schema markup and encouraged customer reviews.</li>
-          <li>**Results:** Ranked in the top 3 for 80% of local keywords and saw a 40% increase in local inquiries.</li>
-        </ul>
-        <p className="text-gray-500 text-xs mt-4">Tools: Google My Business, Moz Local, BrightLocal</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Case Study 1: E-commerce Organic Traffic Growth */}
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+          <h3 className="text-xl font-semibold text-white mb-2">Case Study: E-commerce Organic Traffic Surge</h3>
+          <p className="text-gray-400 text-sm mb-4">
+            **Challenge:** A niche e-commerce site struggled with low organic traffic despite having unique products.
+          </p>
+          <img src="https://placehold.co/400x250/3B82F6/FFFFFF?text=SEO+Traffic+Graph" alt="SEO Traffic Graph" className="w-full h-auto rounded-lg mb-4" />
+          <ul className="list-disc list-inside text-gray-400 text-sm space-y-1">
+            <li>Conducted extensive keyword research to identify high-potential long-tail keywords.</li>
+            <li>Optimized product pages and category descriptions for target keywords.</li>
+            <li>Implemented technical SEO fixes (site speed, mobile responsiveness, schema markup).</li>
+            <li>**Results:** Achieved a 70% increase in organic traffic and a 25% improvement in keyword rankings for top terms within 6 months.</li>
+          </ul>
+          <p className="text-gray-500 text-xs mt-4">Tools: Google Search Console, SEMrush, Screaming Frog</p>
+        </div>
+
+        {/* Case Study 2: Local Business SEO Domination */}
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+          <h3 className="text-xl font-semibold text-white mb-2">Case Study: Local Service Business Ranking Boost</h3>
+          <p className="text-gray-400 text-sm mb-4">
+            **Challenge:** A local service provider had minimal online presence and was losing customers to competitors.
+          </p>
+          <img src="https://placehold.co/400x250/8B5CF6/FFFFFF?text=Local+SEO" alt="Local SEO Map" className="w-full h-auto rounded-lg mb-4" />
+          <ul className="list-disc list-inside text-gray-400 text-sm space-y-1">
+            <li>Optimized Google My Business profile and local citations.</li>
+            <li>Developed location-specific landing pages with optimized content.</li>
+            <li>Implemented local schema markup and encouraged customer reviews.</li>
+            <li>**Results:** Ranked in the top 3 for 80% of local keywords and saw a 40% increase in local inquiries.</li>
+          </ul>
+          <p className="text-gray-500 text-xs mt-4">Tools: Google My Business, Moz Local, BrightLocal</p>
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 const AIDevContent = () => (
   <section>
@@ -853,6 +946,8 @@ export default function Portfolio() {
   const [activePage, setActivePage] = useState("home");
   // State to hold the URL of the currently selected image for large view
   const [selectedImage, setSelectedImage] = useState(null);
+  // State for mobile menu visibility
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Effect to track mouse movement for the background gradient
   useEffect(() => {
@@ -868,6 +963,12 @@ export default function Portfolio() {
   // Pass setSelectedImage to HomeContent
   const ActiveContentComponent = navItems.find((p) => p.id === activePage)?.content;
 
+  // Function to close mobile menu and set active page
+  const handleNavLinkClick = (pageId) => {
+    setActivePage(pageId);
+    setIsMobileMenuOpen(false); // Close menu on navigation
+  };
+
   return (
     <div className="relative min-h-screen bg-black text-white font-sans overflow-hidden">
       {/* Background radial gradient following mouse */}
@@ -882,8 +983,16 @@ export default function Portfolio() {
       <CursorFollower />
 
       <div className="flex h-screen">
-        {/* Sidebar Navigation */}
-        <div className="w-60 bg-white/5 backdrop-blur-md border-r border-white/10 px-4 py-6 space-y-6 z-10">
+        {/* Mobile Header (visible on small screens) */}
+        <div className="md:hidden fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-md border-b border-white/10 p-4 flex items-center justify-between z-20">
+          <h1 className="text-xl font-semibold">Calvin Korkie</h1>
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 rounded-md hover:bg-white/10">
+            <Menu className="w-6 h-6 text-white" />
+          </button>
+        </div>
+
+        {/* Sidebar Navigation (Desktop) */}
+        <div className="hidden md:block w-60 bg-white/5 backdrop-blur-md border-r border-white/10 px-4 py-6 space-y-6 z-10">
           <div className="flex flex-col items-center space-y-2">
             <motion.div
               className="relative rounded-full border-2 border-transparent"
@@ -908,7 +1017,7 @@ export default function Portfolio() {
             {navItems.map((item) => (
               <li
                 key={item.id}
-                onClick={() => setActivePage(item.id)}
+                onClick={() => handleNavLinkClick(item.id)} // Use handleNavLinkClick
                 className={`flex items-center gap-3 px-2 py-1 rounded-md cursor-pointer transition ${
                   activePage === item.id ? "bg-white/10 text-white" : "text-gray-300 hover:text-white"
                 }`}
@@ -919,8 +1028,42 @@ export default function Portfolio() {
           </ul>
         </div>
 
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="fixed inset-0 bg-black/90 backdrop-blur-lg z-30 flex flex-col p-6 md:hidden"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold">Navigation</h2>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-md hover:bg-white/10">
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+              <ul className="space-y-6">
+                {navItems.map((item) => (
+                  <li
+                    key={item.id}
+                    onClick={() => handleNavLinkClick(item.id)} // Use handleNavLinkClick
+                    className={`flex items-center gap-4 text-xl py-2 rounded-md cursor-pointer transition ${
+                      activePage === item.id ? "text-white font-semibold bg-white/10" : "text-gray-300 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    {item.icon} <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto px-12 py-12">
+        {/* Added pt-16 for mobile to account for fixed header */}
+        <div className="flex-1 overflow-y-auto px-4 py-12 md:px-12 md:pt-12 pt-16">
           <div className="max-w-4xl mx-auto">
             {/* Render content based on active page, now as a component */}
             {/* Conditionally render HomeContent or the LargeImageViewer */}
