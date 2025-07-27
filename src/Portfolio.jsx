@@ -985,15 +985,8 @@ export default function Portfolio() {
       <div className="flex h-screen">
         {/* Mobile Header (visible on small screens) */}
         <div className="md:hidden fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-md border-b border-white/10 p-4 flex items-center justify-between z-20">
-          {/* Profile picture and name for mobile header */}
-          <div className="flex items-center gap-2">
-            <img
-              src="https://i.ibb.co/kVZjJf5Y/photo-of-meeee.webp"
-              alt="Calvin Korkie"
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <h1 className="text-xl font-semibold">Calvin Korkie</h1>
-          </div>
+          {/* Reverted to just name in mobile header as per feedback */}
+          <h1 className="text-xl font-semibold">Calvin Korkie</h1>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 rounded-md hover:bg-white/10">
             <Menu className="w-6 h-6 text-white" />
           </button>
@@ -1044,7 +1037,8 @@ export default function Portfolio() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="fixed inset-0 bg-black/90 backdrop-blur-lg z-30 flex flex-col p-6 md:hidden"
+              // Added pt-20 to push content down from the top of the screen
+              className="fixed inset-0 bg-black/90 backdrop-blur-lg z-30 flex flex-col p-6 pt-20 md:hidden" 
             >
               {/* Profile info at the top of the mobile menu */}
               <div className="flex flex-col items-center space-y-2 mb-8">
@@ -1092,8 +1086,8 @@ export default function Portfolio() {
         </AnimatePresence>
 
         {/* Main Content Area */}
-        {/* Added pt-16 for mobile to account for fixed header */}
-        <div className="flex-1 overflow-y-auto px-4 py-12 md:px-12 md:pt-12 pt-16">
+        {/* Adjusted pt-24 for mobile to account for fixed header and prevent cropping */}
+        <div className="flex-1 overflow-y-auto px-4 py-12 md:px-12 md:pt-12 pt-24">
           <div className="max-w-4xl mx-auto">
             {/* Render content based on active page, now as a component */}
             {/* Conditionally render HomeContent or the LargeImageViewer */}
