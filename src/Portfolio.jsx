@@ -5,6 +5,7 @@ import { PenTool, LayoutGrid, Globe, Search, Code, ChevronRight, ChevronDown, X,
 /**
  * CursorFollower Component
  * Renders a small element that follows the cursor and scales based on mouse movement speed.
+ * This component is now hidden on mobile screens.
  */
 const CursorFollower = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -36,22 +37,53 @@ const CursorFollower = () => {
       lastTimestamp.current = currentTime;
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    // Only add event listener if on a desktop-like device (based on window width)
+    // This is a simple check, a more robust solution might use media queries or touch detection
+    if (window.innerWidth >= 768) { // Tailwind's 'md' breakpoint is 768px
+      window.addEventListener("mousemove", handleMouseMove);
+    }
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      if (window.innerWidth >= 768) {
+        window.removeEventListener("mousemove", handleMouseMove);
+      }
     };
   }, []);
 
   return (
+    // This div is hidden on mobile screens (md:hidden)
     <motion.div
-      className="fixed top-0 left-0 w-4 h-4 rounded-full bg-white/20 pointer-events-none z-50"
+      className="fixed top-0 left-0 w-4 h-4 rounded-full bg-white/20 pointer-events-none z-50 hidden md:block"
       style={{
         translateX: mousePosition.x - 8, // Adjust by half of w/h to center the dot
         translateY: mousePosition.y - 8, // Adjust by half of w/h to center the dot
         scale,
       }}
       transition={{ type: "tween", ease: "easeOut", duration: 0.1 }}
+    />
+  );
+};
+
+/**
+ * MobileAmbientLight Component
+ * Renders a subtle, pulsating radial light effect visible only on mobile screens.
+ */
+const MobileAmbientLight = () => {
+  return (
+    <motion.div
+      className="fixed inset-0 z-0 md:hidden pointer-events-none" // Hidden on desktop, visible on mobile
+      style={{
+        background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08), transparent 70%)`,
+      }}
+      animate={{
+        scale: [1, 1.05, 1], // Subtle pulse effect
+        opacity: [0.8, 0.9, 0.8], // Subtle opacity change
+      }}
+      transition={{
+        duration: 4, // Slow pulse
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
     />
   );
 };
@@ -68,15 +100,15 @@ const ExpandablePhotosWidget = ({ isExpanded, setIsExpanded, setSelectedImage })
     "https://i.ibb.co/21b1s0nj/logo.png",
     "https://i.ibb.co/p7297MR/vo0id-logo.png",
     "https://i.ibb.co/PGFQkrJM/think.png",
-    "https://placehold.co/150x150/0000FF/FFFFFF?text=Logo+4",
-    "https://placehold.co/150x150/FF0000/FFFFFF?text=Logo+5",
-    "https://placehold.co/150x150/00FF00/FFFFFF?text=Logo+6",
+    "https://i.ibb.co/9mgwLzSG/clouds-1.png",
+    "https://i.ibb.co/MxTwCzyd/handddd.png",
+    "https://i.ibb.co/nqWwwQd0/kopoai-grey.png",
     "https://placehold.co/150x150/FFFF00/000000?text=Logo+7",
     "https://placehold.co/150x150/800080/FFFFFF?text=Logo+8",
     "https://placehold.co/150x150/FFA500/000000?text=Logo+9",
     "https://placehold.co/150x150/00FFFF/000000?text=Logo+10",
     "https://placehold.co/150x150/FF00FF/000000?text=Logo+11",
-    "https://placehold.co/150x150/008080/FFFFFF?text=Logo+12",
+    "https://placehold.co/15old.co/150x150/008080/FFFFFF?text=Logo+12",
     "https://placehold.co/150x150/800000/FFFFFF?text=Logo+13",
     "https://placehold.co/150x150/008000/FFFFFF?text=Logo+14",
     "https://placehold.co/150x150/000080/FFFFFF?text=Logo+15",
@@ -355,7 +387,7 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
         style={{ outline: 'none' }} // Ensure no outline
         onClick={(e) => e.stopPropagation()} // Prevent click from propagating to overlay
       >
-        <div className="relative w-full h-full p-6">
+        <div className="relative w-full h-full p-6 overflow-hidden rounded-xl"> 
           <button
             onClick={onClose}
             className="absolute top-0 right-0 w-10 h-10 bg-red-600 hover:bg-red-700 text-white transition-all duration-200 z-10 rounded-full flex items-center justify-center shadow-lg border border-red-400"
@@ -366,7 +398,7 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
           <img
             src={imageUrl}
             alt="Large view"
-            className="w-full h-full object-contain rounded-xl" // Added rounded-xl here
+            className="w-full h-full object-contain rounded-xl" // Ensure rounded-xl is applied here
             style={{ border: 'none', outline: 'none' }} // Ensure image itself has no border/outline
           />
         </div>
@@ -411,32 +443,100 @@ const SkillCard = ({ skill }) => {
 
 /**
  * ProjectCard Component
- * Displays a single project with its image, title, and description,
- * mimicking the style of the "Spaces" widgets.
+ * Displays a single project with its image, title, and description.
+ * It now manages its own expanded state, but is controlled by a parent to ensure only one is open.
  */
-const ProjectCard = ({ project }) => {
+const ProjectCard = ({ project, isExpanded, onSelect }) => { // isExpanded and onSelect props
+  const toggleExpansion = () => {
+    onSelect(project.id); // Notify parent to set this project as selected (or deselect if already selected)
+  };
+
   return (
     <motion.div
-      className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-4 space-y-2 flex flex-col justify-between"
+      className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-4 space-y-2 flex flex-col justify-between cursor-pointer"
       whileHover={{ scale: 1.02 }}
       transition={{ duration: 0.2 }}
+      onClick={toggleExpansion} // Toggle expansion on click
     >
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-white text-lg font-semibold">{project.name}</h3>
           <p className="text-gray-400 text-sm">{project.category}</p>
         </div>
-        <ChevronRight className="w-4 h-4 text-white/50" />
+        {isExpanded ? (
+          <ChevronDown className="w-4 h-4 text-white/50 transition-transform duration-300 transform rotate-180" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-white/50 transition-transform duration-300" />
+        )}
       </div>
       {/* Project Image/Visual Area - mimicking the inner containers of Spaces */}
-      <div className="rounded-xl overflow-hidden bg-white/10 mt-2 p-3 flex items-center justify-center h-24">
-        <img
-          src={project.imageUrl}
-          alt={project.name}
-          className="w-full h-full object-contain p-1" // object-contain and p-1 for fit and buffer
-        />
+      <div className="rounded-xl overflow-hidden mt-2 p-3 flex items-center justify-center h-24"
+        style={{ backgroundColor: project.backgroundColor || "rgba(255,255,255,0.1)" }}> {/* Use project.backgroundColor */}
+        {project.id === "awaken" ? (
+          <span className="text-white text-3xl font-anton">AWAKEN</span> // Anton font for AWAKEN
+        ) : project.id === "vaulted" ? ( // Add condition for vaulted
+          <span className="text-white text-3xl font-sans font-bold">VAULTED</span> // Different font and style for Vaulted
+        ) : project.id === "horizon" ? ( // Add condition for Horizon
+          <span className="text-white text-3xl font-sans font-thin">HORIZON</span> // Thin text for Horizon
+        ) : project.id === "onthewall" ? ( // Add condition for OnTheWall
+          <span className="text-white text-3xl font-anton">ONTHEWALL</span> // Bad Hawk (using Anton as a bold example)
+        ) : (
+          <img
+            src={project.imageUrl}
+            alt={project.name}
+            className="w-full h-full object-contain p-1" // object-contain and p-1 for fit and buffer
+          />
+        )}
       </div>
-      <p className="text-gray-400 text-sm">{project.description}</p>
+      
+      {/* Technologies and Links - always visible */}
+      {project.technologies && project.technologies.length > 0 && (
+        <div className="mt-2">
+          <p className="text-gray-300 text-xs font-semibold">Technologies:</p>
+          <ul className="flex flex-wrap gap-1 mt-1">
+            {project.technologies.map((tech, i) => (
+              <li key={i} className="bg-white/10 text-gray-300 text-xs px-2 py-0.5 rounded-full">
+                {tech}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {project.links && project.links.length > 0 && (
+        <div className="mt-2">
+          <p className="text-gray-300 text-xs font-semibold">Links:</p>
+          <ul className="flex flex-wrap gap-2 mt-1">
+            {project.links.map((link, i) => (
+              <li key={i}>
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white hover:text-gray-300 text-xs underline flex items-center gap-1" // Changed text-blue-400 to text-white
+                  onClick={(e) => e.stopPropagation()} // Prevent card from collapsing when clicking link
+                >
+                  {link.name} <Link size={12} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Expanded Description - conditionally rendered */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <p className="text-gray-400 text-sm mt-2">{project.fullDescription}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -466,179 +566,6 @@ const ExperienceItem = ({ experience }) => (
   </motion.div>
 );
 
-
-/**
- * HomeContent Component
- * Renders the content for the "Home" section of the portfolio.
- * It now manages the isExpanded state for the Photos widget.
- */
-const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
-  // Centralized state for both Photos and AI Dev widget expansion
-  const [isLinkedWidgetsExpanded, setIsLinkedWidgetsExpanded] = useState(false);
-
-  // Data for Skills & Tools section
-  const skills = [
-    { name: "Figma", iconUrl: "https://www.vectorlogo.zone/logos/figma/figma-icon.svg", description: "Expert in UI/UX design, prototyping, and collaborative workflows." },
-    { name: "Adobe Photoshop", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Adobe_Photoshop_CC_icon.svg/1024px-Adobe_Photoshop_CC_icon.svg.png", description: "Proficient in image manipulation, digital painting, and graphic design." }, // Updated to a PNG that should invert well
-    { name: "Adobe Illustrator", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Adobe_Illustrator_CC_icon.svg", description: "Skilled in vector graphics, logo design, and illustration." },
-    { name: "React", iconUrl: "https://www.vectorlogo.zone/logos/reactjs/reactjs-icon.svg", description: "Experienced in building modern, responsive web applications." },
-    { name: "HTML5", iconUrl: "https://www.vectorlogo.zone/logos/w3_html5/w3_html5-icon.svg", description: "Proficient in semantic HTML and web structure." },
-    { name: "Swift", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@5.15.0/icons/swift.svg", description: "Experienced in iOS and macOS application development." }, // Updated Swift to simple-icons SVG
-    { name: "Final Cut Pro", iconUrl: "https://help.apple.com/assets/673BE5C0E115654F7F097772/673BE5C41BAE7922D30F2CE1/en_US/97f5f4dfe6df84d78caacff68ec63538.png", description: "Skilled in professional video editing and post-production." }, // Updated to the user-provided PNG
-    { name: "Python", iconUrl: "https://www.vectorlogo.zone/logos/python/python-icon.svg", description: "Proficient in scripting, data analysis, and AI/ML development." },
-    { name: "TensorFlow", iconUrl: "https://www.vectorlogo.zone/logos/tensorflow/tensorflow-icon.svg", description: "Familiar with machine learning model development and deployment." },
-    { name: "Tailwind CSS", iconUrl: "https://www.vectorlogo.zone/logos/tailwindcss/tailwindcss-icon.svg", description: "Adept at rapid UI development with utility-first CSS framework." },
-    { name: "Three.js", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@5.15.0/icons/threedotjs.svg", description: "Experience with 3D graphics and interactive web experiences." }, // Updated Three.js to simple-icons SVG
-    { name: "Google Cloud", iconUrl: "https://www.vectorlogo.zone/logos/google_cloud/google_cloud-icon.svg", description: "Familiar with cloud services for deployment and data management." },
-  ];
-
-  // Data for Experience section
-  const experiences = [
-    {
-      role: "Lead Product Designer & AI Developer",
-      company: "v0id - Synthetic Mind",
-      duration: "Jan 2023 - Present",
-      responsibilities: [
-        "Led the design and development of an interactive AI art piece, 'Synthetic Mind'.",
-        "Integrated LLMs with memory and planning for believable AI behavior.",
-        "Managed UI/UX from concept to deployment, focusing on user empathy.",
-      ],
-    },
-    {
-      role: "Senior UI/UX Designer",
-      company: "Innovate Solutions Inc.",
-      duration: "Aug 2019 - Dec 2022",
-      responsibilities: [
-        "Designed and prototyped user interfaces for various web and mobile applications.",
-        "Conducted user research, usability testing, and A/B testing to optimize designs.",
-        "Collaborated with cross-functional teams to ensure design feasibility and implementation.",
-      ],
-    },
-    {
-      role: "Graphic Designer",
-      company: "Creative Agency Co.",
-      duration: "Jun 2016 - Jul 2019",
-      responsibilities: [
-        "Developed brand identities, logos, and marketing collateral for diverse clients.",
-        "Created engaging visual content for digital and print media campaigns.",
-        "Managed multiple design projects from concept to final delivery.",
-      ],
-    },
-  ];
-
-  // Data for Projects section, now with more details for the new card style
-  const projects = [
-    {
-      name: "Kwality & Klarity",
-      category: "Brand & Web Design",
-      description: "Crafting a unique brand identity and responsive web presence for a consulting firm.",
-      imageUrl: "https://placehold.co/150x100/34D399/FFFFFF?text=K&K", // Example placeholder
-    },
-    {
-      name: "AWAKEN",
-      category: "AI Art Installation",
-      description: "An immersive AI-driven art experience exploring consciousness and perception.",
-      imageUrl: "https://placehold.co/150x100/60A5FA/FFFFFF?text=AWAKEN", // Example placeholder
-    },
-    {
-      name: "v0id",
-      category: "AI Research & Development",
-      description: "Core R&D for synthetic minds and generative AI applications.",
-      imageUrl: "https://i.ibb.co/p7297MR/vo0id-logo.png", // Using an existing logo
-    },
-    {
-      name: "Kopoai",
-      category: "Fintech Platform UI",
-      description: "Designing intuitive user interfaces for a cutting-edge financial technology platform.",
-      imageUrl: "https://placehold.co/150x100/EC4899/FFFFFF?text=Kopoai", // Example placeholder
-    },
-    {
-      name: "Horizon",
-      category: "Mobile App Development",
-      description: "Developing a cross-platform mobile application for outdoor enthusiasts.",
-      imageUrl: "https://placehold.co/150x100/F59E0B/FFFFFF?text=Horizon", // Example placeholder
-    },
-    {
-      name: "OnTheWall",
-      category: "E-commerce & UX",
-      description: "Optimizing the user experience and visual design for an online art marketplace.",
-      imageUrl: "https://placehold.co/150x100/10B981/FFFFFF?text=OnTheWall", // Example placeholder
-    },
-    {
-      name: "Vaulted",
-      category: "Security Software UI",
-      description: "Creating a secure and user-friendly interface for data encryption software.",
-      imageUrl: "https://placehold.co/150x100/EF4444/FFFFFF?text=Vaulted", // Example placeholder
-    },
-  ];
-
-
-  return (
-    <div className="space-y-20">
-      {/* About Section */}
-      <section>
-        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">About</h2>
-        <p className="text-gray-400 leading-relaxed text-lg">
-          I'm a multidisciplinary digital creative blending beautiful design, strategic thinking,
-          and cutting-cutting-edge AI development. I specialize in crafting visual experiences that deliver results.
-        </p>
-      </section>
-
-      {/* Spaces Section, including the ExpandablePhotosWidget */}
-      <section>
-        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Spaces</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"> {/* Changed to grid-cols-1 on mobile */}
-          {/* Pass the centralized state and setter to both widgets */}
-          <ExpandablePhotosWidget
-            isExpanded={isLinkedWidgetsExpanded}
-            setIsExpanded={setIsLinkedWidgetsExpanded}
-            setSelectedImage={setSelectedImage}
-          />
-
-          {/* AI Dev Widget - now controlled by the same state */}
-          <AIDevWidget
-            isExpanded={isLinkedWidgetsExpanded}
-            setIsExpanded={setIsLinkedWidgetsExpanded}
-          />
-        </div>
-      </section>
-
-      {/* New Skills & Tools Section */}
-      <section>
-        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Skills & Tools</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-          {skills.map((skill, i) => (
-            <SkillCard key={i} skill={skill} />
-          ))}
-        </div>
-      </section>
-
-      {/* Projects Section - Now using ProjectCard component and grid layout */}
-      <section>
-        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Projects</h2>
-        <p className="text-gray-400 leading-relaxed text-lg">
-          From brand systems and marketing funnels to advanced AI tools and web platforms, my portfolio spans industries and mediums.
-          Notable projects include Kwality & Klarity, AWAKEN, v0id, Kopoai, Horizon, OnTheWall, and Vaulted.
-        </p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Changed to grid-cols-1 on mobile */}
-          {projects.map((proj, i) => (
-            <ProjectCard key={i} project={proj} />
-          ))}
-        </div>
-      </section>
-
-      {/* Redesigned Experience Section */}
-      <section>
-        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Experience</h2>
-        <div className="grid grid-cols-1 gap-6">
-          {experiences.map((exp, i) => (
-            <ExperienceItem key={i} experience={exp} />
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-};
 
 // Define separate components for other content sections
 const GraphicDesignContent = () => (
@@ -889,6 +816,273 @@ const AIDevContent = () => (
 );
 
 
+/**
+ * HomeContent Component
+ * Renders the content for the "Home" section of the portfolio.
+ * It now manages the isExpanded state for the Photos widget.
+ */
+const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
+  // Centralized state for both Photos and AI Dev widget expansion
+  const [isLinkedWidgetsExpanded, setIsLinkedWidgetsExpanded] = useState(false);
+  // State to manage which row of projects is currently expanded
+  const [expandedProjectRow, setExpandedProjectRow] = useState(null); // Can be 0, 1, 2, etc. or null
+
+  // Function to handle project card clicks for row-by-row expansion
+  const handleProjectClick = (projectId, rowIndex) => {
+    // If the clicked row is already expanded, collapse it.
+    // Otherwise, expand the clicked row.
+    setExpandedProjectRow(prevRowIndex => (prevRowIndex === rowIndex ? null : rowIndex));
+  };
+
+  // Data for Skills & Tools section
+  const skills = [
+    { name: "Figma", iconUrl: "https://www.vectorlogo.zone/logos/figma/figma-icon.svg", description: "Expert in UI/UX design, prototyping, and collaborative workflows." },
+    { name: "Adobe Photoshop", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Adobe_Photoshop_CC_icon.svg/1024px-Adobe_Photoshop_CC_icon.png", description: "Proficient in image manipulation, digital painting, and graphic design." }, // Updated to a PNG that should invert well
+    { name: "Adobe Illustrator", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Adobe_Illustrator_CC_icon.svg", description: "Skilled in vector graphics, logo design, and illustration." },
+    { name: "React", iconUrl: "https://www.vectorlogo.zone/logos/reactjs/reactjs-icon.svg", description: "Experienced in building modern, responsive web applications." },
+    { name: "HTML5", iconUrl: "https://www.vectorlogo.zone/logos/w3_html5/w3_html5-icon.svg", description: "Proficient in semantic HTML and web structure." },
+    { name: "Swift", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@5.15.0/icons/swift.svg", description: "Experienced in iOS and macOS application development." }, // Updated Swift to simple-icons SVG
+    { name: "Final Cut Pro", iconUrl: "https://help.apple.com/assets/673BE5C0E115654F7F097772/673BE5C41BAE7922D30F2CE1/en_US/97f5f4dfe6df84d78caacff68ec63538.png", description: "Skilled in professional video editing and post-production." }, // Updated to the user-provided PNG
+    { name: "Python", iconUrl: "https://www.vectorlogo.zone/logos/python/python-icon.svg", description: "Proficient in scripting, data analysis, and AI/ML development." },
+    { name: "TensorFlow", iconUrl: "https://www.vectorlogo.zone/logos/tensorflow/tensorflow-icon.svg", description: "Familiar with machine learning model development and deployment." },
+    { name: "Tailwind CSS", iconUrl: "https://www.vectorlogo.zone/logos/tailwindcss/tailwindcss-icon.svg", description: "Adept at rapid UI development with utility-first CSS framework." },
+    { name: "Three.js", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@5.15.0/icons/threedotjs.svg", description: "Experience with 3D graphics and interactive web experiences." }, // Updated Three.js to simple-icons SVG
+    { name: "Google Cloud", iconUrl: "https://www.vectorlogo.zone/logos/google_cloud/google_cloud-icon.svg", description: "Familiar with cloud services for deployment and data management." },
+  ];
+
+  // Data for Experience section
+  const experiences = [
+    {
+      role: "Lead Product Designer & AI Developer",
+      company: "v0id - Synthetic Mind",
+      duration: "Jan 2023 - Present",
+      responsibilities: [
+        "Led the design and development of an interactive AI art piece, 'Synthetic Mind'.",
+        "Integrated LLMs with memory and planning for believable AI behavior.",
+        "Managed UI/UX from concept to deployment, focusing on user empathy.",
+      ],
+    },
+    {
+      role: "Senior UI/UX Designer",
+      company: "Innovate Solutions Inc.",
+      duration: "Aug 2019 - Dec 2022",
+      responsibilities: [
+        "Designed and prototyped user interfaces for various web and mobile applications.",
+        "Conducted user research, usability testing, and A/B testing to optimize designs.",
+        "Collaborated with cross-functional teams to ensure design feasibility and implementation.",
+      ],
+    },
+    {
+      role: "Graphic Designer",
+      company: "Creative Agency Co.",
+      duration: "Jun 2016 - Jul 2019",
+      responsibilities: [
+        "Developed brand identities, logos, and marketing collateral for diverse clients.",
+        "Created engaging visual content for digital and print media campaigns.",
+        "Managed multiple design projects from concept to final delivery.",
+      ],
+    },
+  ];
+
+  // Data for Projects section, now with more details for the new card style
+  const projects = [
+    {
+      id: "awaken",
+      name: "AWAKEN",
+      category: "Fashion House",
+      description: "Creative direction for immersive AI-driven art experiences, blending fashion, technology, and art.",
+      fullDescription: "As the creative director for AWAKEN, a cutting-edge fashion house, I guided the artistic vision for their immersive AI-driven art experiences. This involved conceptualizing and overseeing the development of interactive installations that blend fashion, technology, and art to explore themes of consciousness and perception, creating unique brand narratives.",
+      imageUrl: "https://placehold.co/150x100/da4a44/FFFFFF?text=AWAKEN&font=Anton", // Red background, Anton font
+      backgroundColor: "#da4a44", // Explicitly set red background
+      technologies: ["Creative Direction", "AI Integration", "Interactive Design", "Event Production"],
+      links: [
+        { name: "Video Demo", url: "https://www.youtube.com/watch?v=exampleAWAKEN" },
+        { name: "Press Kit", url: "https://www.example.com/awaken-press" },
+      ],
+    },
+    {
+      id: "kwality-klarity", // Unique ID for each project
+      name: "Kwality & Klarity",
+      category: "Media Company",
+      description: "Comprehensive web design and brand development, including blog, newsletter, and overall web presence.",
+      fullDescription: "For Kwality & Klarity, a dynamic media company, I spearheaded the complete web design and brand development. This involved crafting a cohesive visual identity, designing and implementing a user-friendly website, setting up an engaging blog, and integrating a newsletter system to enhance their digital outreach and audience engagement.",
+      imageUrl: "https://i.ibb.co/v40Ndw3j/WHITEKWALITY-KLARITYDISTORTED.png", // Black background
+      backgroundColor: "#000000", // Explicitly set black background
+      technologies: ["React", "Tailwind CSS", "Figma", "Adobe Illustrator", "Email Marketing Platform"],
+      links: [
+        { name: "Live Site", url: "https://kwalityandklarity.com" }, // Updated URL
+        { name: "Case Study", url: "https://www.example.com/kwalityklarity-case-study" },
+      ],
+    },
+    {
+      id: "v0id",
+      name: "v0id",
+      category: "AI Research & Development",
+      description: "Personal R&D initiative focused on synthetic minds and advanced generative AI applications.",
+      fullDescription: "v0id is my personal research initiative focused on the development of synthetic minds and advanced generative AI applications. This includes experimentation with large language models, neural networks, and creating AI that can exhibit emergent behaviors and creative outputs.",
+      imageUrl: "https://i.ibb.co/p7297MR/vo0id-logo.png",
+      backgroundColor: "#bdc0a7", // Dark grey for v0id
+      technologies: ["Python", "TensorFlow", "PyTorch", "Google Cloud", "Adobe Photoshop", "React", "HTML"],
+      links: [
+        { name: "Mind.v0id.live", url: "https://mind.v0id.live" }, // Direct link as requested previously
+        { name: "Research Paper", url: "https://www.example.com/v0id-research" },
+      ],
+    },
+    {
+      id: "kopoai",
+      name: "Kopoai",
+      category: "Activewear Brand UX",
+      description: "Enhanced user experience across digital platforms for an innovative activewear brand.",
+      fullDescription: "For Kopoai, an innovative activewear brand, I focused on enhancing the user experience across their digital platforms. This included optimizing the e-commerce website and mobile app for seamless navigation, intuitive product discovery, and a streamlined checkout process, ensuring a premium user journey that reflects the brand's quality.",
+      imageUrl: "https://i.ibb.co/Gf3P2mfD/kopoai-logo.png", // Updated image URL
+      backgroundColor: "#f0ece0", // Earth-tone brown for Kopoai
+      technologies: ["Figma", "User Research", "Wireframing", "Prototyping", "E-commerce Platforms"], // Technologies restored
+      links: [
+        { name: "Website UX", url: "https://www.example.com/kopoai-ux-case-study" },
+        { name: "App Prototype", url: "https://www.figma.com/proto/exampleKopoaiMobile" }, // Link restored
+      ],
+    },
+    {
+      id: "horizon",
+      name: "Horizon",
+      category: "Travel Mobile App",
+      description: "Development of a cross-platform mobile application for outdoor enthusiasts, featuring GPS and offline maps.",
+      fullDescription: "Horizon is a comprehensive travel mobile app designed for outdoor enthusiasts. I was responsible for the development of its cross-platform functionality, including GPS tracking for trails, offline map capabilities, and social features that allow users to share their adventures and connect with a community.",
+      imageUrl: "https://placehold.co/150x100/4A4A4A/FFFFFF?text=Horizon&font=sans-serif&weight=100", // Thin text for Horizon
+      backgroundColor: "#4A4A4A", // Dark grey for Horizon
+      technologies: ["React Native", "Swift", "Firebase", "Mapbox API", "GPS Integration"],
+      links: [
+        { name: "App Store", url: "https://apps.apple.com/app/exampleHorizon" },
+        { name: "Play Store", url: "https://play.google.com/store/apps/details?id=exampleHorizon" },
+      ],
+    },
+    {
+      id: "onthewall",
+      name: "OnTheWall",
+      category: "E-commerce & UX",
+      description: "Optimizing the user experience and visual design for an online art marketplace.",
+      fullDescription: "Revamped the user experience and visual design of 'OnTheWall', an online marketplace for independent artists. Focused on improving discoverability, streamlining the purchase process, and enhancing the overall aesthetic to attract more users and artists.",
+      imageUrl: "https://placehold.co/150x100/0033cc/FFFFFF?text=OnTheWall&font=Anton",
+      backgroundColor: "#0033cc", // Dark blue for OnTheWall
+      technologies: ["Figma", "Shopify", "HTML", "CSS", "JavaScript"],
+      links: [
+        { name: "Live Site", url: "https://www.example.com/onthewall" },
+        { name: "UX Case Study", url: "https://www.example.com/onthewall-ux-case-study" },
+      ],
+    },
+    {
+      id: "clouds",
+      name: "CLOUDS",
+      category: "Generative Art",
+      description: "An experimental project exploring dynamic, cloud-like visual formations.",
+      fullDescription: "CLOUDS is a generative art piece that uses Perlin noise and particle systems to create endlessly evolving, organic cloud formations. It's a real-time visualization designed for ambient display, exploring the beauty of natural phenomena through code.",
+      imageUrl: "https://i.ibb.co/p6qLNCsw/clouds-banner.png",
+      backgroundColor: "#fadd2a", // Yellow for Clouds
+      technologies: ["JavaScript", "HTML5 Canvas", "Perlin Noise Algorithms"],
+      links: [
+        { name: "Live Demo", url: "https://www.example.com/clouds-demo" },
+        { name: "CodePen", url: "https://codepen.io/yourusername/pen/exampleClouds" },
+      ],
+    },
+    {
+      id: "vaulted",
+      name: "Vaulted",
+      category: "Security Software UI",
+      description: "Creating a secure and user-friendly interface for data encryption software.",
+      fullDescription: "Designed the user interface for Vaulted, a desktop application for secure data encryption and management. Prioritized usability and clear communication of security features, ensuring a complex tool felt intuitive and trustworthy for everyday users.",
+      imageUrl: "https://placehold.co/150x100/EF4444/FFFFFF?text=Vaulted", // Placeholder, but will be rendered as text
+      backgroundColor: "#646d83", // Slate blue for Vaulted
+      technologies: ["Figma", "Electron", "React", "Node.js"],
+      links: [
+        { name: "Product Page", url: "https://www.example.com/vaulted" },
+        { name: "Demo Video", url: "https://www.youtube.com/watch?v=exampleVaulted" },
+      ],
+    },
+  ];
+
+  // Group projects into rows for linked expansion
+  const projectRows = [];
+  for (let i = 0; i < projects.length; i += 2) {
+    projectRows.push(projects.slice(i, i + 2));
+  }
+
+
+  return (
+    <div className="space-y-20">
+      {/* About Section */}
+      <section>
+        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">About</h2>
+        <p className="text-gray-400 leading-relaxed text-lg">
+          I'm a multidisciplinary digital creative blending beautiful design, strategic thinking,
+          and cutting-cutting-edge AI development. I specialize in crafting visual experiences that deliver results.
+        </p>
+      </section>
+
+      {/* Spaces Section, including the ExpandablePhotosWidget */}
+      <section>
+        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Spaces</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"> {/* Changed to grid-cols-1 on mobile */}
+          {/* Pass the centralized state and setter to both widgets */}
+          <ExpandablePhotosWidget
+            isExpanded={isLinkedWidgetsExpanded}
+            setIsExpanded={setIsLinkedWidgetsExpanded}
+            setSelectedImage={setSelectedImage}
+          />
+
+          {/* AI Dev Widget - now controlled by the same state */}
+          <AIDevWidget
+            isExpanded={isLinkedWidgetsExpanded}
+            setIsExpanded={setIsLinkedWidgetsExpanded}
+          />
+        </div>
+      </section>
+
+      {/* Projects Section - Now using ProjectCard component and grid layout */}
+      <section>
+        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Projects</h2>
+        <p className="text-gray-400 leading-relaxed text-lg">
+          From brand systems and marketing funnels to advanced AI tools and web platforms, my portfolio spans industries and mediums.
+          Notable projects include Kwality & Klarity, AWAKEN, v0id, Kopoai, Horizon, OnTheWall, and Vaulted.
+        </p>
+        <div className="mt-8 space-y-6"> {/* Use space-y-6 for vertical spacing between rows */}
+          {projectRows.map((row, rowIndex) => (
+            <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {row.map((proj) => (
+                <ProjectCard
+                  key={proj.id}
+                  project={proj}
+                  isExpanded={expandedProjectRow === rowIndex} // Check if this project's row is expanded
+                  onSelect={() => handleProjectClick(proj.id, rowIndex)} // Pass row index for selection
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Redesigned Experience Section */}
+      <section>
+        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Experience</h2>
+        <div className="grid grid-cols-1 gap-6">
+          {experiences.map((exp, i) => (
+            <ExperienceItem key={i} experience={exp} />
+          ))}
+        </div>
+      </section>
+
+      {/* New Skills & Tools Section */}
+      <section>
+        <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Skills & Tools</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
+          {skills.map((skill, i) => (
+            <SkillCard key={i} skill={skill} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
 // Define the navigation items for the sidebar
 const navItems = [
   {
@@ -936,10 +1130,10 @@ const navItems = [
 ];
 
 /**
- * Main Portfolio Component
+ * Main App Component
  * Renders the overall portfolio layout, including sidebar navigation and main content.
  */
-export default function Portfolio() {
+function App() {
   // State for mouse position to create the radial gradient effect
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   // State to manage the currently active navigation page
@@ -971,6 +1165,16 @@ export default function Portfolio() {
 
   return (
     <div className="relative min-h-screen bg-black text-white font-sans overflow-hidden">
+      {/* Style block for importing Google Fonts */}
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+          .font-anton {
+            font-family: 'Anton', sans-serif;
+          }
+        `}
+      </style>
+
       {/* Background radial gradient following mouse */}
       <motion.div
         className="pointer-events-none fixed inset-0 z-0"
@@ -979,8 +1183,11 @@ export default function Portfolio() {
         }}
       />
 
-      {/* Cursor Follower Component */}
+      {/* Cursor Follower Component (Desktop only) */}
       <CursorFollower />
+
+      {/* Mobile Ambient Light Effect (Mobile only) */}
+      <MobileAmbientLight />
 
       <div className="flex h-screen">
         {/* Mobile Header (visible on small screens) */}
@@ -1037,8 +1244,8 @@ export default function Portfolio() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              // Added pt-20 to push content down from the top of the screen
-              className="fixed inset-0 bg-black/90 backdrop-blur-lg z-30 flex flex-col p-6 pt-20 md:hidden" 
+              // Adjusted pt-24 to push content down further, accounting for the header
+              className="fixed inset-0 bg-black/90 backdrop-blur-lg z-30 flex flex-col p-6 pt-24 md:hidden" 
             >
               {/* Profile info at the top of the mobile menu */}
               <div className="flex flex-col items-center space-y-2 mb-8">
@@ -1062,12 +1269,11 @@ export default function Portfolio() {
                 <p className="text-xs text-gray-400">Cape Town, South Africa</p>
               </div>
 
-              <div className="flex justify-between items-center mb-8">
-                {/* Removed "Navigation" text as profile info now serves as header */}
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-md hover:bg-white/10 absolute top-4 right-4">
-                  <X className="w-6 h-6 text-white" />
-                </button>
-              </div>
+              {/* Close button for mobile menu, positioned relative to the overlay itself */}
+              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-md hover:bg-white/10 absolute top-4 right-4">
+                <X className="w-6 h-6 text-white" />
+              </button>
+              
               <ul className="space-y-6">
                 {navItems.map((item) => (
                   <li
@@ -1102,3 +1308,5 @@ export default function Portfolio() {
     </div>
   );
 }
+
+export default App;
