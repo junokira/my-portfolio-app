@@ -378,30 +378,34 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-8"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" // Padding for the overall overlay
       onClick={onClose} // Close when clicking outside the image
     >
       {/* Main image container with the desired border and shadow */}
       <div 
-        className="relative max-w-2xl max-h-[80vh] w-full h-full bg-white/10 shadow-2xl rounded-xl border-2 border-gray-600" // Combined borders and shadow here
+        // Removed explicit w-[90vw] and h-[90vh] to prevent stretching.
+        // Instead, we use max-w and max-h relative to the viewport,
+        // allowing the content (image) to dictate its own height while constrained.
+        className="relative flex flex-col items-center justify-center bg-white/10 shadow-2xl rounded-xl border-2 border-gray-600 p-4 md:max-w-2xl max-w-[calc(100vw - 32px)] max-h-[calc(100vh - 32px)]"
         style={{ outline: 'none' }} // Ensure no outline
         onClick={(e) => e.stopPropagation()} // Prevent click from propagating to overlay
       >
-        <div className="relative w-full h-full p-6 overflow-hidden rounded-xl"> 
-          <button
-            onClick={onClose}
-            className="absolute top-0 right-0 w-10 h-10 bg-red-600 hover:bg-red-700 text-white transition-all duration-200 z-10 rounded-full flex items-center justify-center shadow-lg border border-red-400"
-            aria-label="Close image"
-          >
-            <X size={18} />
-          </button>
-          <img
-            src={imageUrl}
-            alt="Large view"
-            className="w-full h-full object-contain rounded-xl" // Ensure rounded-xl is applied here
-            style={{ border: 'none', outline: 'none' }} // Ensure image itself has no border/outline
-          />
-        </div>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 w-8 h-8 bg-red-600 hover:bg-red-700 text-white transition-all duration-200 z-10 rounded-full flex items-center justify-center shadow-lg border border-red-400"
+          aria-label="Close image"
+        >
+          <X size={16} />
+        </button>
+        <img
+          src={imageUrl}
+          alt="Large view"
+          // Crucial: max-w-full and max-h-full ensure image scales down proportionally.
+          // object-contain ensures aspect ratio is maintained, preventing stretching.
+          // w-full h-full ensures it tries to fill the available space, but max-w/h will constrain it.
+          className="w-full h-full max-w-full max-h-full object-contain rounded-xl"
+          style={{ border: 'none', outline: 'none' }} // Ensure image itself has no border/outline
+        />
       </div>
     </motion.div>
   );
@@ -665,7 +669,7 @@ const DigitalMarketingContent = () => (
       {/* Campaign 1: Product Launch Campaign */}
       <div className="bg-white/5 border border-white/10 rounded-xl p-6">
         <h3 className="text-xl font-semibold text-white mb-2">Campaign: "InnovateX" Product Launch Strategy</h3>
-        <p className="text-gray-400 text-sm mb-4">
+        <p className="text-400 text-sm mb-4">
           **Objective:** Generate excitement and pre-orders for a new tech gadget.
         </p>
         <img src="https://placehold.co/400x250/10B981/FFFFFF?text=Product+Launch+Ad" alt="InnovateX Product Launch Ad" className="w-full h-auto rounded-lg mb-4" />
