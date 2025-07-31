@@ -20,7 +20,7 @@ const CursorFollower = () => {
 
       // Calculate distance moved
       const dx = e.clientX - lastMousePosition.current.x;
-      const dy = e.clientY - lastMousePosition.current.y; 
+      const dy = e.clientY - lastMousePosition.current.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       // Calculate speed (pixels per millisecond)
@@ -264,10 +264,10 @@ const AIDevWidget = ({ isExpanded, setIsExpanded }) => { // Now accepts isExpand
       const centerX = w / 2;
       const centerY = h / 2;
       const radius = Math.min(w, h) / 2 - 20; // Leave some margin
-      
+
       // Number of lines radiating from center
       const numLines = 18;
-      
+
       ctx.strokeStyle = '#000000'; // Black lines
       ctx.lineWidth = 1;
       ctx.fillStyle = '#000000'; // Black dots
@@ -386,19 +386,20 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
       onClick={onClose} // Close when clicking outside the image
     >
       {/* Main image container with the desired border and shadow */}
-      <div 
+      <div
         // Changed sizing to use w-full max-w-sm for mobile, md:max-w-2xl for desktop,
         // and aspect-square to force a square shape.
         className="relative flex flex-col items-center justify-center bg-white/10 shadow-2xl rounded-xl border-2 border-gray-600 p-4 w-full max-w-sm md:max-w-2xl aspect-square"
         style={{ outline: 'none' }} // Ensure no outline
         onClick={(e) => e.stopPropagation()} // Prevent click from propagating to overlay
       >
+        {/* Close button with subtle, apple-like styling */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 w-8 h-8 bg-red-600 hover:bg-red-700 text-white transition-all duration-200 z-10 rounded-full flex items-center justify-center shadow-lg border border-red-400"
+          className="absolute top-2 left-2 w-10 h-10 bg-red-500/80 backdrop-blur-sm hover:bg-red-600/90 transition-all duration-200 z-10 rounded-full flex items-center justify-center shadow-lg"
           aria-label="Close image"
         >
-          <X size={16} />
+          {/* Removed the X icon */}
         </button>
         <img
           src={imageUrl}
@@ -407,10 +408,10 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
           // object-contain ensures aspect ratio is maintained, preventing stretching.
           // w-full h-full ensures it tries to fill the available space, but max-w/h will constrain it.
           className="w-full h-full max-w-full max-h-full object-contain rounded-xl"
-          style={{ 
-            border: 'none', 
-            outline: 'none', 
-            WebkitUserSelect: "none", 
+          style={{
+            border: 'none',
+            outline: 'none',
+            WebkitUserSelect: "none",
             MozUserSelect: "none",
             msUserSelect: "none",
             userSelect: "none",
@@ -418,21 +419,19 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
           }} // Fix: Prevent long-press save menu on iOS
           onContextMenu={(e) => e.preventDefault()} // Fix: Prevent right-click and long-press
         />
-        {/* The dynamic watermark overlay with a link */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto">
-          <a
-            href="https://twitter.com/anticalvin_"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white text-3xl md:text-5xl lg:text-6xl font-bold opacity-70 hover:opacity-100 transition-opacity duration-200"
+        {/* The dynamic watermark overlay with a copyright symbol and name, now in the center */}
+        <a href="https://www.behance.net/calvin-portfolio" target="_blank" rel="noopener noreferrer"
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+          <span
+            className="text-white text-7xl md:text-7xl font-bold opacity-20 hover:opacity-40 transition-opacity"
             style={{
                 textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                 userSelect: 'none',
             }}
           >
-            @anticalvin_
-          </a>
-        </div>
+            ©
+          </span>
+        </a>
       </div>
     </motion.div>
   );
@@ -521,7 +520,7 @@ const ProjectCard = ({ project, isExpanded, onSelect }) => { // isExpanded and o
           />
         )}
       </div>
-      
+
       {/* Technologies and Links - always visible */}
       {project.technologies && project.technologies.length > 0 && (
         <div className="mt-2">
@@ -1280,7 +1279,7 @@ function App() {
               exit={{ x: "-100%" }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
               // Adjusted pt-24 to push content down further, accounting for the header
-              className="fixed inset-0 bg-black/90 backdrop-blur-lg z-30 flex flex-col p-6 pt-24 md:hidden" 
+              className="fixed inset-0 bg-black/90 backdrop-blur-lg z-30 flex flex-col p-6 pt-24 md:hidden"
             >
               {/* Profile info at the top of the mobile menu */}
               <div className="flex flex-col items-center space-y-2 mb-8">
@@ -1310,7 +1309,7 @@ function App() {
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-md hover:bg-white/10 absolute top-4 right-4">
                 <X className="w-6 h-6 text-white" />
               </button>
-              
+
               <ul className="space-y-6">
                 {navItems.map((item) => (
                   <li
