@@ -108,7 +108,7 @@ const ExpandablePhotosWidget = ({ isExpanded, setIsExpanded, setSelectedImage })
     "https://placehold.co/150x150/FFA500/000000?text=Logo+9",
     "https://placehold.co/150x150/00FFFF/000000?text=Logo+10",
     "https://placehold.co/150x150/FF00FF/000000?text=Logo+11",
-    "https://placehold.co/15old.co/150x150/008080/FFFFFF?text=Logo+12",
+    "https://placehold.co/150x150/008080/FFFFFF?text=Logo+12",
     "https://placehold.co/150x150/800000/FFFFFF?text=Logo+13",
     "https://placehold.co/150x150/008000/FFFFFF?text=Logo+14",
     "https://placehold.co/150x150/000080/FFFFFF?text=Logo+15",
@@ -190,7 +190,8 @@ const ExpandablePhotosWidget = ({ isExpanded, setIsExpanded, setSelectedImage })
                 src={url}
                 alt={`Logo ${i + 1}`}
                 className="w-20 h-20 object-contain rounded-lg"
-                onContextMenu={(e) => e.preventDefault()} // Fix: Prevent right-click and long-press
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ WebkitTouchCallout: "none" }}
               />
             </motion.div>
           ))}
@@ -210,7 +211,8 @@ const ExpandablePhotosWidget = ({ isExpanded, setIsExpanded, setSelectedImage })
                 src={url}
                 alt={`Logo ${collapsedCount + i + 1}`}
                 className="w-20 h-20 object-contain rounded-lg"
-                onContextMenu={(e) => e.preventDefault()} // Fix: Prevent right-click and long-press
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ WebkitTouchCallout: "none" }}
               />
             </motion.div>
           ))}
@@ -290,7 +292,7 @@ const AIDevWidget = ({ isExpanded, setIsExpanded }) => { // Now accepts isExpand
           const dotPhase = wavePhase - (j * 0.5); // Each dot follows the wave with delay
 
           // Use a smooth sine wave that creates outward flow
-          const waveOffset = Math.sin(dotPhase) * 15;
+          const waveOffset = Math.sin(dotPhase + Math.PI) * 15; // Adjusted wave phase
           const dotRadius = baseRadius + waveOffset;
 
           const dotX = centerX + dotRadius * Math.cos(angle);
@@ -359,7 +361,7 @@ const AIDevWidget = ({ isExpanded, setIsExpanded }) => { // Now accepts isExpand
       >
         {isExpanded && (
           <p className="text-gray-400 text-sm">
-            The Synthetic Mind, a core project by v0id, is an. interactive AI art piece designed to simulate complex cognitive processes. It maintains a dynamic semantic network of concepts, an episodic memory of past thoughts, and a set of internal drives (curiosity, purpose, etc.). This architecture allows the mind to generate reflective thoughts by prompting a large language model with rich context, including recent internal monologues, key focus concepts, and its evolving identity. It can also ingest external data, like Wikipedia summaries, to simulate continuous learning and growth. The result is a compelling, real-time display of an AI's internal world, inviting users to observe and interact with a truly evolving digital consciousness, offering a unique glimpse into an artificial mind's inner workings.
+            The Synthetic Mind, a core project by v0id, is an interactive AI art piece designed to simulate complex cognitive processes. It maintains a dynamic semantic network of concepts, an episodic memory of past thoughts, and a set of internal drives (curiosity, purpose, etc.). This architecture allows the mind to generate reflective thoughts by prompting a large language model with rich context, including recent internal monologues, key focus concepts, and its evolving identity. It can also ingest external data, like Wikipedia summaries, to simulate continuous learning and growth. The result is a compelling, real-time display of an AI's internal world, inviting users to observe and interact with a truly evolving digital consciousness, offering a unique glimpse into an artificial mind's inner workings.
           </p>
         )}
       </motion.div>
@@ -405,7 +407,15 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
           // object-contain ensures aspect ratio is maintained, preventing stretching.
           // w-full h-full ensures it tries to fill the available space, but max-w/h will constrain it.
           className="w-full h-full max-w-full max-h-full object-contain rounded-xl"
-          style={{ border: 'none', outline: 'none' }} // Ensure image itself has no border/outline
+          style={{ 
+            border: 'none', 
+            outline: 'none', 
+            WebkitUserSelect: "none", 
+            MozUserSelect: "none",
+            msUserSelect: "none",
+            userSelect: "none",
+            WebkitTouchCallout: "none"
+          }} // Fix: Prevent long-press save menu on iOS
           onContextMenu={(e) => e.preventDefault()} // Fix: Prevent right-click and long-press
         />
       </div>
@@ -491,6 +501,8 @@ const ProjectCard = ({ project, isExpanded, onSelect }) => { // isExpanded and o
             src={project.imageUrl}
             alt={project.name}
             className="w-full h-full object-contain p-1" // object-contain and p-1 for fit and buffer
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ WebkitTouchCallout: "none" }}
           />
         )}
       </div>
@@ -911,7 +923,7 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
       name: "Kwality & Klarity",
       category: "Media Company",
       description: "Comprehensive web design and brand development, including blog, newsletter, and overall web presence.",
-      fullDescription: "For Kwality & Klarity, a dynamic media company, I spearheaded the complete web design and brand development. This involved crafting a cohesive visual identity, designing and implementing a user-friendly website, setting up an. engaging blog, and integrating a newsletter system to enhance their digital outreach and audience engagement.",
+      fullDescription: "For Kwality & Klarity, a dynamic media company, I spearheaded the complete web design and brand development. This involved crafting a cohesive visual identity, designing and implementing a user-friendly website, setting up an engaging blog, and integrating a newsletter system to enhance their digital outreach and audience engagement.",
       imageUrl: "https://i.ibb.co/v40Ndw3j/WHITEKWALITY-KLARITYDISTORTED.png", // Black background
       backgroundColor: "#000000", // Explicitly set black background
       technologies: ["React", "Tailwind CSS", "Figma", "Adobe Illustrator", "Email Marketing Platform"],
@@ -1221,6 +1233,8 @@ function App() {
                 src="https://i.ibb.co/kVZjJf5Y/photo-of-meeee.webp"
                 alt="Calvin Korkie"
                 className="w-20 h-20 rounded-full object-cover" // Removed border from img itself
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ WebkitTouchCallout: "none" }}
               />
             </motion.div>
             <h1 className="text-xl font-semibold text-center">Calvin Korkie</h1>
@@ -1268,6 +1282,8 @@ function App() {
                     src="https://i.ibb.co/kVZjJf5Y/photo-of-meeee.webp"
                     alt="Calvin Korkie"
                     className="w-20 h-20 rounded-full object-cover"
+                    onContextMenu={(e) => e.preventDefault()}
+                    style={{ WebkitTouchCallout: "none" }}
                   />
                 </motion.div>
                 <h1 className="text-xl font-semibold text-center">Calvin Korkie</h1>
