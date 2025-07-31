@@ -418,6 +418,21 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
           }} // Fix: Prevent long-press save menu on iOS
           onContextMenu={(e) => e.preventDefault()} // Fix: Prevent right-click and long-press
         />
+        {/* The dynamic watermark overlay with a link */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto">
+          <a
+            href="https://twitter.com/anticalvin_"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white text-3xl md:text-5xl lg:text-6xl font-bold opacity-70 hover:opacity-100 transition-opacity duration-200"
+            style={{
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                userSelect: 'none',
+            }}
+          >
+            @anticalvin_
+          </a>
+        </div>
       </div>
     </motion.div>
   );
