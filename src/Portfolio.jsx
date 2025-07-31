@@ -190,6 +190,7 @@ const ExpandablePhotosWidget = ({ isExpanded, setIsExpanded, setSelectedImage })
                 src={url}
                 alt={`Logo ${i + 1}`}
                 className="w-20 h-20 object-contain rounded-lg"
+                onContextMenu={(e) => e.preventDefault()} // Fix: Prevent right-click and long-press
               />
             </motion.div>
           ))}
@@ -209,6 +210,7 @@ const ExpandablePhotosWidget = ({ isExpanded, setIsExpanded, setSelectedImage })
                 src={url}
                 alt={`Logo ${collapsedCount + i + 1}`}
                 className="w-20 h-20 object-contain rounded-lg"
+                onContextMenu={(e) => e.preventDefault()} // Fix: Prevent right-click and long-press
               />
             </motion.div>
           ))}
@@ -383,10 +385,9 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
     >
       {/* Main image container with the desired border and shadow */}
       <div 
-        // Applying aspect-square to force a square shape.
-        // Using max-w-[90vw] and max-h-[90vh] to ensure it fits within the viewport,
-        // and then max-w-2xl for desktop.
-        className="relative flex flex-col items-center justify-center bg-white/10 shadow-2xl rounded-xl border-2 border-gray-600 p-4 aspect-square max-w-[90vw] max-h-[90vh] md:max-w-2xl"
+        // Changed sizing to use w-full max-w-sm for mobile, md:max-w-2xl for desktop,
+        // and aspect-square to force a square shape.
+        className="relative flex flex-col items-center justify-center bg-white/10 shadow-2xl rounded-xl border-2 border-gray-600 p-4 w-full max-w-sm md:max-w-2xl aspect-square"
         style={{ outline: 'none' }} // Ensure no outline
         onClick={(e) => e.stopPropagation()} // Prevent click from propagating to overlay
       >
@@ -402,8 +403,10 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
           alt="Large view"
           // Crucial: max-w-full and max-h-full ensure image scales down proportionally.
           // object-contain ensures aspect ratio is maintained, preventing stretching.
+          // w-full h-full ensures it tries to fill the available space, but max-w/h will constrain it.
           className="w-full h-full max-w-full max-h-full object-contain rounded-xl"
           style={{ border: 'none', outline: 'none' }} // Ensure image itself has no border/outline
+          onContextMenu={(e) => e.preventDefault()} // Fix: Prevent right-click and long-press
         />
       </div>
     </motion.div>
@@ -871,7 +874,7 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
       duration: "Aug 2019 - Dec 2022",
       responsibilities: [
         "Designed and prototyped user interfaces for various web and mobile applications.",
-        "Conducted user research, usability testing and A/B testing to optimize designs.",
+        "Conducted user research, usability testing, and A/B testing to optimize designs.",
         "Collaborated with cross-functional teams to ensure design feasibility and implementation.",
       ],
     },
@@ -1155,34 +1158,6 @@ function App() {
     // Cleanup event listener on component unmount
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
-
-  // Effect to disable right-click and image dragging globally
-  useEffect(() => {
-    // Function to handle the right-click event
-    const handleContextMenu = (event) => {
-      event.preventDefault();
-      console.log("Right-click is disabled!");
-    };
-
-    // Function to handle the dragstart event for images
-    const handleDragStart = (event) => {
-      if (event.target.tagName === 'IMG') { // Only apply to images
-        event.preventDefault();
-        console.log("Image dragging disabled!");
-      }
-    };
-
-    // Add event listeners when the component mounts
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('dragstart', handleDragStart); // Listen for dragstart globally or on specific elements
-
-    // Clean up event listeners when the component unmounts
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('dragstart', handleDragStart);
-    };
-  }, []); // Empty dependency array means this effect runs once on mount and cleans up on unmount
-
 
   // Find the active content component based on the activePage state
   // Pass setSelectedImage to HomeContent
