@@ -383,10 +383,10 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
     >
       {/* Main image container with the desired border and shadow */}
       <div 
-        // Removed explicit w-[90vw] and h-[90vh] to prevent stretching.
-        // Instead, we use max-w and max-h relative to the viewport,
-        // allowing the content (image) to dictate its own height while constrained.
-        className="relative flex flex-col items-center justify-center bg-white/10 shadow-2xl rounded-xl border-2 border-gray-600 p-4 md:max-w-2xl max-w-[calc(100vw - 32px)] max-h-[calc(100vh - 32px)]"
+        // Applying aspect-square to force a square shape.
+        // Using max-w-[90vw] and max-h-[90vh] to ensure it fits within the viewport,
+        // and then max-w-2xl for desktop.
+        className="relative flex flex-col items-center justify-center bg-white/10 shadow-2xl rounded-xl border-2 border-gray-600 p-4 aspect-square max-w-[90vw] max-h-[90vh] md:max-w-2xl"
         style={{ outline: 'none' }} // Ensure no outline
         onClick={(e) => e.stopPropagation()} // Prevent click from propagating to overlay
       >
@@ -402,7 +402,6 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
           alt="Large view"
           // Crucial: max-w-full and max-h-full ensure image scales down proportionally.
           // object-contain ensures aspect ratio is maintained, preventing stretching.
-          // w-full h-full ensures it tries to fill the available space, but max-w/h will constrain it.
           className="w-full h-full max-w-full max-h-full object-contain rounded-xl"
           style={{ border: 'none', outline: 'none' }} // Ensure image itself has no border/outline
         />
@@ -872,7 +871,7 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
       duration: "Aug 2019 - Dec 2022",
       responsibilities: [
         "Designed and prototyped user interfaces for various web and mobile applications.",
-        "Conducted user research, usability testing, and A/B testing to optimize designs.",
+        "Conducted user research, usability testing and A/B testing to optimize designs.",
         "Collaborated with cross-functional teams to ensure design feasibility and implementation.",
       ],
     },
@@ -909,7 +908,7 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
       name: "Kwality & Klarity",
       category: "Media Company",
       description: "Comprehensive web design and brand development, including blog, newsletter, and overall web presence.",
-      fullDescription: "For Kwality & Klarity, a dynamic media company, I spearheaded the complete web design and brand development. This involved crafting a cohesive visual identity, designing and implementing a user-friendly website, setting up an engaging blog, and integrating a newsletter system to enhance their digital outreach and audience engagement.",
+      fullDescription: "For Kwality & Klarity, a dynamic media company, I spearheaded the complete web design and brand development. This involved crafting a cohesive visual identity, designing and implementing a user-friendly website, setting up an. engaging blog, and integrating a newsletter system to enhance their digital outreach and audience engagement.",
       imageUrl: "https://i.ibb.co/v40Ndw3j/WHITEKWALITY-KLARITYDISTORTED.png", // Black background
       backgroundColor: "#000000", // Explicitly set black background
       technologies: ["React", "Tailwind CSS", "Figma", "Adobe Illustrator", "Email Marketing Platform"],
@@ -1156,6 +1155,34 @@ function App() {
     // Cleanup event listener on component unmount
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+  // Effect to disable right-click and image dragging globally
+  useEffect(() => {
+    // Function to handle the right-click event
+    const handleContextMenu = (event) => {
+      event.preventDefault();
+      console.log("Right-click is disabled!");
+    };
+
+    // Function to handle the dragstart event for images
+    const handleDragStart = (event) => {
+      if (event.target.tagName === 'IMG') { // Only apply to images
+        event.preventDefault();
+        console.log("Image dragging disabled!");
+      }
+    };
+
+    // Add event listeners when the component mounts
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('dragstart', handleDragStart); // Listen for dragstart globally or on specific elements
+
+    // Clean up event listeners when the component unmounts
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('dragstart', handleDragStart);
+    };
+  }, []); // Empty dependency array means this effect runs once on mount and cleans up on unmount
+
 
   // Find the active content component based on the activePage state
   // Pass setSelectedImage to HomeContent
