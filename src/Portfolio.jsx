@@ -491,7 +491,8 @@ const ProjectCard = ({ project, isExpanded, onSelect }) => { // isExpanded and o
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-white text-lg font-semibold">{project.name}</h3>
-          <p className="text-gray-400 text-sm">{project.category}</p>
+          {/* Changed to render project.subtitle instead of project.category */}
+          <p className="text-gray-400 text-sm">{project.subtitle}</p>
         </div>
         {isExpanded ? (
           <ChevronDown className="w-4 h-4 text-white/50 transition-transform duration-300 transform rotate-180" />
@@ -858,6 +859,8 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
   const [isLinkedWidgetsExpanded, setIsLinkedWidgetsExpanded] = useState(false);
   // State to manage which row of projects is currently expanded
   const [expandedProjectRow, setExpandedProjectRow] = useState(null); // Can be 0, 1, 2, etc. or null
+  // New state for the active filter category
+  const [activeCategory, setActiveCategory] = useState("All");
 
   // Function to handle project card clicks for row-by-row expansion
   const handleProjectClick = (projectId, rowIndex) => {
@@ -916,12 +919,13 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     },
   ];
 
-  // Data for Projects section, now with more details for the new card style
+  // Data for Projects section, with new simplified categories
   const projects = [
     {
       id: "awaken",
       name: "AWAKEN",
-      category: "Fashion House",
+      category: "Branding",
+      subtitle: "Fashion House", // Capitalized
       description: "Creative direction for immersive AI-driven art experiences, blending fashion, technology, and art.",
       fullDescription: "As the creative director for AWAKEN, a cutting-edge fashion house, I guided the artistic vision for their immersive AI-driven art experiences. This involved conceptualizing and overseeing the development of interactive installations that blend fashion, technology, and art to explore themes of consciousness and perception, creating unique brand narratives.",
       imageUrl: "https://placehold.co/150x100/da4a44/FFFFFF?text=AWAKEN&font=Anton", // Red background, Anton font
@@ -935,7 +939,8 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     {
       id: "kwality-klarity", // Unique ID for each project
       name: "Kwality & Klarity",
-      category: "Media Company",
+      category: "Branding",
+      subtitle: "Media Company", // Capitalized
       description: "Comprehensive web design and brand development, including blog, newsletter, and overall web presence.",
       fullDescription: "For Kwality & Klarity, a dynamic media company, I spearheaded the complete web design and brand development. This involved crafting a cohesive visual identity, designing and implementing a user-friendly website, setting up an engaging blog, and integrating a newsletter system to enhance their digital outreach and audience engagement.",
       imageUrl: "https://i.ibb.co/v40Ndw3j/WHITEKWALITY-KLARITYDISTORTED.png", // Black background
@@ -949,7 +954,8 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     {
       id: "v0id",
       name: "v0id",
-      category: "AI Research & Development",
+      category: "AI Dev",
+      subtitle: "AI Research & Development", // Capitalized
       description: "Personal R&D initiative focused on synthetic minds and advanced generative AI applications.",
       fullDescription: "v0id is my personal research initiative focused on the development of synthetic minds and advanced generative AI applications. This includes experimentation with large language models, neural networks, and creating AI that can exhibit emergent behaviors and creative outputs.",
       imageUrl: "https://i.ibb.co/p7297MR/vo0id-logo.png",
@@ -963,7 +969,8 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     {
       id: "kopoai",
       name: "Kopoai",
-      category: "Activewear Brand UX",
+      category: "UI/UX",
+      subtitle: "Activewear Brand", // Capitalized
       description: "Enhanced user experience across digital platforms for an innovative activewear brand.",
       fullDescription: "For Kopoai, an innovative activewear brand, I focused on enhancing the user experience across their digital platforms. This included optimizing the e-commerce website and mobile app for seamless navigation, intuitive product discovery, and a streamlined checkout process, ensuring a premium user journey that reflects the brand's quality.",
       imageUrl: "https://i.ibb.co/Gf3P2mfD/kopoai-logo.png", // Updated image URL
@@ -977,7 +984,8 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     {
       id: "horizon",
       name: "Horizon",
-      category: "Travel Mobile App",
+      category: "UI/UX",
+      subtitle: "Travel App", // Capitalized
       description: "Development of a cross-platform mobile application for outdoor enthusiasts, featuring GPS and offline maps.",
       fullDescription: "Horizon is a comprehensive travel mobile app designed for outdoor enthusiasts. I was responsible for the development of its cross-platform functionality, including GPS tracking for trails, offline map capabilities, and social features that allow users to share their adventures and connect with a community.",
       imageUrl: "https://placehold.co/150x100/4A4A4A/FFFFFF?text=Horizon&font=sans-serif&weight=100", // Thin text for Horizon
@@ -991,7 +999,8 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     {
       id: "onthewall",
       name: "OnTheWall",
-      category: "E-commerce & UX",
+      category: "SEO", // Changed category from "UI/UX" to "SEO"
+      subtitle: "Art Marketplace", // Capitalized
       description: "Optimizing the user experience and visual design for an online art marketplace.",
       fullDescription: "Revamped the user experience and visual design of 'OnTheWall', an online marketplace for independent artists. Focused on improving discoverability, streamlining the purchase process, and enhancing the overall aesthetic to attract more users and artists.",
       imageUrl: "https://placehold.co/150x100/0033cc/FFFFFF?text=OnTheWall&font=Anton",
@@ -1005,7 +1014,8 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     {
       id: "clouds",
       name: "CLOUDS",
-      category: "Generative Art",
+      category: "Graphic Design",
+      subtitle: "Generative Art", // Capitalized
       description: "An experimental project exploring dynamic, cloud-like visual formations.",
       fullDescription: "CLOUDS is a generative art piece that uses Perlin noise and particle systems to create endlessly evolving, organic cloud formations. It's a real-time visualization designed for ambient display, exploring the beauty of natural phenomena through code.",
       imageUrl: "https://i.ibb.co/p6qLNCsw/clouds-banner.png",
@@ -1019,7 +1029,8 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     {
       id: "vaulted",
       name: "Vaulted",
-      category: "Security Software UI",
+      category: "UI/UX",
+      subtitle: "Encryption Software", // Capitalized
       description: "Creating a secure and user-friendly interface for data encryption software.",
       fullDescription: "Designed the user interface for Vaulted, a desktop application for secure data encryption and management. Prioritized usability and clear communication of security features, ensuring a complex tool felt intuitive and trustworthy for everyday users.",
       imageUrl: "https://placehold.co/150x100/EF4444/FFFFFF?text=Vaulted", // Placeholder, but will be rendered as text
@@ -1032,10 +1043,18 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
     },
   ];
 
-  // Group projects into rows for linked expansion
+  // Hardcoded categories as per user request
+  const allCategories = ["All", "Branding", "UI/UX", "SEO", "AI Dev", "Graphic Design"];
+
+  // Filter projects based on the active category
+  const filteredProjects = activeCategory === "All"
+    ? projects
+    : projects.filter(project => project.category === activeCategory);
+
+  // Group filtered projects into rows for linked expansion
   const projectRows = [];
-  for (let i = 0; i < projects.length; i += 2) {
-    projectRows.push(projects.slice(i, i + 2));
+  for (let i = 0; i < filteredProjects.length; i += 2) {
+    projectRows.push(filteredProjects.slice(i, i + 2));
   }
 
 
@@ -1072,10 +1091,25 @@ const HomeContent = ({ setSelectedImage }) => { // Receive setSelectedImage prop
       {/* Projects Section - Now using ProjectCard component and grid layout */}
       <section>
         <h2 className="text-3xl font-semibold mb-4 border-b border-white/10 pb-2">Projects</h2>
-        <p className="text-gray-400 leading-relaxed text-lg">
-          From brand systems and marketing funnels to advanced AI tools and web platforms, my portfolio spans industries and mediums.
-          Notable projects include Kwality & Klarity, AWAKEN, v0id, Kopoai, Horizon, OnTheWall, and Vaulted.
-        </p>
+        {/* Removed the "Notable projects..." text as requested. */}
+        {/* Project Filter UI - NEWLY ADDED */}
+        <div className="flex overflow-x-auto space-x-2 my-8 whitespace-nowrap scrollbar-hide">
+          {allCategories.map((category) => (
+            <motion.button
+              key={category}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition flex-shrink-0 ${
+                activeCategory === category
+                  ? "bg-white/10 text-white"
+                  : "bg-white/5 text-gray-400 hover:bg-white/10"
+              }`}
+              onClick={() => setActiveCategory(category)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {category}
+            </motion.button>
+          ))}
+        </div>
         <div className="mt-8 space-y-6"> {/* Use space-y-6 for vertical spacing between rows */}
           {projectRows.map((row, rowIndex) => (
             <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1203,6 +1237,14 @@ function App() {
           @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
           .font-anton {
             font-family: 'Anton', sans-serif;
+          }
+          /* Custom utility for hiding scrollbar */
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
           }
         `}
       </style>
@@ -1334,9 +1376,13 @@ function App() {
             {/* Render content based on active page, now as a component */}
             {/* Conditionally render HomeContent or the LargeImageViewer */}
             {selectedImage ? (
-              <LargeImageViewer imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
+              <AnimatePresence>
+                <LargeImageViewer imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
+              </AnimatePresence>
+            ) : ActiveContentComponent ? (
+              <ActiveContentComponent setSelectedImage={setSelectedImage} />
             ) : (
-              ActiveContentComponent && <ActiveContentComponent setSelectedImage={setSelectedImage} />
+              <div className="text-center text-gray-500 mt-20">Page not found.</div>
             )}
           </div>
         </div>
