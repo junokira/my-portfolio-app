@@ -2,419 +2,6 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PenTool, LayoutGrid, Globe, Code, ChevronRight, ChevronDown, X, Menu, Link, Search, FileText, BarChart2, Monitor, Users, Briefcase } from "lucide-react";
 
-// --- Main App Component ---
-const App = () => {
-  const [isNavOpen, setIsNavOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isWidgetsExpanded, setIsWidgetsExpanded] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("All");
-  
-  const backgroundCanvasRef = useRef(null);
-  const mousePosition = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-  const shinyTextElementsRef = useRef([]);
-
-  const handleNavLinkClick = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      window.scrollTo({
-        top: element.offsetTop,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape' && selectedImage) {
-        setSelectedImage(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [selectedImage]);
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      mousePosition.current = { x: e.clientX, y: e.clientY };
-      shinyTextElementsRef.current.forEach(el => {
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const elCenterX = rect.left + rect.width / 2;
-        const elCenterY = rect.top + rect.height / 2;
-        const distance = Math.hypot(elCenterX - mousePosition.current.x, elCenterY - mousePosition.current.y);
-        const maxDistance = 200;
-        const intensity = Math.max(0, 1 - distance / maxDistance);
-        el.style.textShadow = `0 0 ${1 + intensity * 3}px rgba(255, 255, 255, ${0.2 + intensity * 0.3})`;
-      });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-
-    const updateShinyElements = () => {
-      shinyTextElementsRef.current = document.querySelectorAll('.shiny-text');
-      handleMouseMove({ clientX: mousePosition.current.x, clientY: mousePosition.current.y });
-    };
-    
-    updateShinyElements();
-    const observer = new MutationObserver(updateShinyElements);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      observer.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    const canvas = backgroundCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let animationFrameId;
-
-    const gridSize = 40;
-    const cubeHeight = gridSize * 2;
-    const cubeWidth = gridSize * 2;
-    const rows = Math.ceil(window.innerHeight / (cubeHeight * 0.75)) + 1;
-    const cols = Math.ceil(window.innerWidth / cubeWidth) + 1;
-
-    const drawCube = (x, y, shade) => {
-        const topShade = `hsl(0, 0%, ${Math.min(15 + shade * 60, 100)}%)`;
-        const leftShade = `hsl(0, 0%, ${Math.min(10 + shade * 40, 100)}%)`;
-        const rightShade = `hsl(0, 0%, ${Math.min(5 + shade * 20, 100)}%)`;
-
-        ctx.beginPath();
-        ctx.moveTo(x, y - gridSize);
-        ctx.lineTo(x + gridSize, y - gridSize / 2);
-        ctx.lineTo(x, y);
-        ctx.lineTo(x - gridSize, y - gridSize / 2);
-        ctx.closePath();
-        ctx.fillStyle = topShade;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(x - gridSize, y - gridSize / 2);
-        ctx.lineTo(x, y);
-        ctx.lineTo(x, y + gridSize);
-        ctx.lineTo(x - gridSize, y + gridSize / 2);
-        ctx.closePath();
-        ctx.fillStyle = leftShade;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(x + gridSize, y - gridSize / 2);
-        ctx.lineTo(x, y);
-        ctx.lineTo(x, y + gridSize);
-        ctx.lineTo(x + gridSize, y + gridSize / 2);
-        ctx.closePath();
-        ctx.fillStyle = rightShade;
-        ctx.fill();
-
-        ctx.strokeStyle = `hsl(0, 0%, ${Math.min(5 + shade * 15, 100)}%)`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-    };
-
-    const draw = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#0a0a0a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const mouseX = mousePosition.current.x;
-      const mouseY = mousePosition.current.y;
-      
-      const offsetX = (window.innerWidth % (gridSize * 2)) / 2;
-      const offsetY = (window.innerHeight % (gridSize * 1.5)) / 2;
-
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const x = offsetX + c * (gridSize * 2) + ((r % 2) === 1 ? gridSize : 0) - gridSize;
-          const y = offsetY + r * (gridSize * 1.5);
-          
-          const distance = Math.hypot(x - mouseX, y - mouseY);
-          const maxDistance = Math.hypot(window.innerWidth, window.innerHeight);
-          const shade = 1 - Math.min(distance / (maxDistance * 0.2), 1);
-          
-          drawCube(x, y, shade);
-        }
-      }
-      
-      animationFrameId = requestAnimationFrame(draw);
-    };
-
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
-  const allCategories = ["All", ...new Set(projects.map(p => p.category))];
-  const filteredProjects = activeFilter === "All" ? projects : projects.filter(p => p.category === activeFilter);
-  
-  const logoWrapperSize = 100;
-  const gapSize = 24;
-  const containerPadding = 12;
-  const numRowsWhenCollapsed = 2;
-  const actualGridContentHeightCollapsed = (numRowsWhenCollapsed * logoWrapperSize) + Math.max(0, (numRowsWhenCollapsed - 1) * gapSize);
-  const collapsedWidgetHeight = `${actualGridContentHeightCollapsed + (containerPadding * 2)}px`;
-
-  return (
-    <div className="relative min-h-screen bg-zinc-950 text-white overflow-hidden">
-      
-      <canvas ref={backgroundCanvasRef} className="fixed top-0 left-0 w-full h-full z-0"></canvas>
-      
-      <div className="absolute inset-0 z-10">
-        <div className="liquid-blur-1"></div>
-        <div className="liquid-blur-2"></div>
-      </div>
-      
-      <TopNav handleNavLinkClick={handleNavLinkClick} />
-      
-      <div className="fixed top-4 right-4 z-40 md:hidden">
-        <button onClick={() => setIsNavOpen(true)} className="p-2 rounded-full glass-container">
-          <Menu />
-        </button>
-      </div>
-
-      <MobileNav isNavOpen={isNavOpen} closeNav={() => setIsNavOpen(false)} handleNavLinkClick={handleNavLinkClick} />
-
-      <div className="relative z-30 flex flex-col min-h-screen">
-        
-        <div className="flex-1 overflow-y-auto px-4 py-12 md:px-12 md:pt-12 pt-24">
-          <div className="max-w-4xl mx-auto space-y-12">
-            
-            {selectedImage && (
-              <LargeImageViewer imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
-            )}
-
-            <header id="home" className="glass-container p-8 text-center flex flex-col items-center">
-              <motion.div
-                className="mb-4 w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-white/50 shadow-lg"
-                whileHover={{ scale: 1.1, rotate: 2 }}
-                transition={{ duration: 0.3 }}
-              >
-                <img
-                  src="https://i.ibb.co/kVZjJf5Y/photo-of-meeee.webp"
-                  alt="Calvin Korkie Profile"
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/160x160/252f3e/ffffff?text=CK'; }}
-                />
-              </motion.div>
-              <h1 className="text-4xl md:text-6xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white shiny-text">
-                Calvin Korkie
-              </h1>
-              <p className="text-xl md:text-2xl text-white shiny-text">Software Engineer | Product Designer</p>
-              <a href="mailto:anticalvin@icloud.com" target="_blank" rel="noopener noreferrer" className="text-sm md:text-base text-white hover:text-white/80 shiny-text mt-2 cursor-pointer">
-                anticalvin@icloud.com
-              </a>
-              <p className="text-sm md:text-base text-white shiny-text mt-2">Cape Town, South Africa</p>
-            </header>
-
-            <section id="spaces-and-generative-art">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white text-center shiny-text">My Spaces & Generative Art</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                <AIDevWidget isExpanded={isWidgetsExpanded} setIsExpanded={setIsWidgetsExpanded} collapsedHeight={collapsedWidgetHeight} />
-                <ExpandablePhotosWidget isExpanded={isWidgetsExpanded} setIsExpanded={setIsWidgetsExpanded} setSelectedImage={setSelectedImage} collapsedHeight={collapsedWidgetHeight} />
-              </div>
-            </section>
-
-            <section id="about" className="glass-container p-8">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white shiny-text">About Me</h2>
-              <p className="text-white leading-relaxed shiny-text">
-                I'm a multidisciplinary digital creative blending beautiful design, strategic thinking, and cutting-cutting-edge AI development. I specialize in crafting visual experiences that deliver results.
-              </p>
-            </section>
-            
-            <section id="projects">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white mb-4 md:mb-0 shiny-text">Projects</h2>
-                <div className="flex flex-wrap gap-2">
-                  {allCategories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setActiveFilter(category)}
-                      className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200
-                        ${activeFilter === category
-                          ? 'bg-white text-zinc-950'
-                          : 'bg-white/10 text-white hover:bg-white/20'
-                        }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <AnimatePresence mode="wait">
-                  {filteredProjects.map((project) => (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.5 }}
-                      layout
-                    >
-                      <ProjectCard project={project} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </section>
-            
-            <section id="experience">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white text-center shiny-text">Experience</h2>
-              <div className="space-y-6">
-                {experience.map((item) => (
-                  <ExperienceCard key={item.id} item={item} />
-                ))}
-              </div>
-            </section>
-
-            <section id="skills">
-              <SkillAndSEOSection />
-            </section>
-            
-            <section id="quote-widget" className="mt-12">
-              <DynamicQuoteWidget />
-            </section>
-
-            <section id="contact" className="glass-container p-8 text-center mt-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white shiny-text">Get In Touch</h2>
-              
-              {/* Email Me Button */}
-              <motion.div className="mb-8">
-                <motion.a
-                  href="mailto:anticalvin@icloud.com"
-                  className="inline-flex items-center gap-3 bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 backdrop-blur-sm border border-white/20"
-                  whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(255,255,255,0.2)" }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <EmailIcon size={24} />
-                  <span className="shiny-text">Email Me</span>
-                </motion.a>
-              </motion.div>
-
-              {/* Social Icons */}
-              <div className="flex justify-center space-x-8">
-                <motion.a
-                  href="https://www.behance.net/calvin-portfolio"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="contact-icon text-white hover:text-blue-400 transition-colors duration-300"
-                  whileHover={{ scale: 1.2, boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <BehanceIcon size={40} />
-                </motion.a>
-                <motion.a
-                  href="https://twitter.com/your-username"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="contact-icon text-white hover:text-blue-400 transition-colors duration-300"
-                  whileHover={{ scale: 1.2, boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <TwitterIcon size={40} />
-                </motion.a>
-                <motion.a
-                  href="https://linkedin.com/in/your-username"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="contact-icon text-white hover:text-blue-600 transition-colors duration-300"
-                  whileHover={{ scale: 1.2, boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <LinkedInIcon size={40} />
-                </motion.a>
-              </div>
-            </section>
-          </div>
-        </div>
-      </div>
-      
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Anton&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
-        
-        body {
-          scroll-behavior: smooth;
-          overflow-x: hidden;
-          font-family: 'Inter', sans-serif;
-        }
-
-        .glass-container {
-          background-color: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(10px) saturate(180%);
-          -webkit-backdrop-filter: blur(10px) saturate(180%);
-          border-radius: 1.5rem;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-          transition: all 0.3s ease-in-out;
-        }
-        
-        .glass-button {
-          transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-        .glass-button:hover {
-          transform: translateY(-2px) scale(1.02);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 255, 255, 0.2);
-        }
-        .liquid-blur-1, .liquid-blur-2 {
-          position: absolute;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #1f2937, #4b5563, #6b7280); 
-          animation: liquid-move 20s infinite ease-in-out alternate;
-          filter: blur(80px);
-          opacity: 0.5;
-        }
-        .liquid-blur-1 {
-          width: 400px;
-          height: 400px;
-          top: -100px;
-          left: -100px;
-          animation-duration: 25s;
-        }
-        .liquid-blur-2 {
-          width: 500px;
-          height: 500px;
-          bottom: -150px;
-          right: -150px;
-          animation-duration: 30s;
-          animation-delay: 2s;
-        }
-        @keyframes liquid-move {
-          0% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(150px, -50px) scale(1.1); }
-          50% { transform: translate(0, 100px) scale(0.9); }
-          75% { transform: translate(-100px, -100px) scale(1.2); }
-          100% { transform: translate(0, 0) scale(1); }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-        
-        .shiny-text {
-            transition: text-shadow 0.2s ease-out;
-            text-shadow: 0 0 1px rgba(255, 255, 255, 0.2);
-        }
-      `}</style>
-    </div>
-  );
-};
-
-export default App;
-
 // --- Data for all sections ---
 const navItems = [
   { id: "home", label: "Home", icon: <PenTool /> },
@@ -750,6 +337,209 @@ const ExpandablePhotosWidget = ({ isExpanded, setIsExpanded, setSelectedImage, c
     </motion.div>
   );
 };
+
+/**
+ * AIDevWidget Component
+ * Manages the display of the AI Dev content with an expand/collapse feature for its description.
+ */
+const AIDevWidget = ({ isExpanded, setIsExpanded, collapsedHeight }) => {
+  const showAIDevDescription = isExpanded;
+  const canvasRef = useRef(null);
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let frame = 0;
+    let animationFrameId;
+
+    const draw = () => {
+      const w = canvas.width = canvas.offsetWidth;
+      const h = canvas.height = canvas.offsetHeight;
+      ctx.clearRect(0, 0, w, h);
+      const centerX = w / 2;
+      const centerY = h / 2;
+      const radius = Math.min(w, h) / 2 - 20;
+      const numLines = 18;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+      ctx.fillStyle = '#000000';
+
+      for (let i = 0; i < numLines; i++) {
+        const angle = (i / numLines) * 2 * Math.PI;
+        const endX = centerX + radius * Math.cos(angle);
+        const endY = centerY + radius * Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        const numDots = 4;
+        for (let j = 1; j <= numDots; j++) {
+          const baseRadius = radius * (j / (numDots + 1));
+          const wavePhase = frame * 0.015;
+          const dotPhase = wavePhase - (j * 0.5);
+          const waveOffset = Math.sin(dotPhase + Math.PI) * 15;
+          const dotRadius = baseRadius + waveOffset;
+          const dotX = centerX + dotRadius * Math.cos(angle);
+          const dotY = centerY + dotRadius * Math.sin(angle);
+          const sizeMultiplier = Math.sin(dotPhase + Math.PI/2) * 0.5 + 1.2;
+          const dotSize = 3 * sizeMultiplier;
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, dotSize, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      }
+      frame++;
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <motion.div
+      className="glass-container p-4 flex flex-col"
+      whileHover={{ scale: 1.05 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="flex justify-between items-center cursor-pointer mb-2" onClick={() => setIsExpanded(!isExpanded)}>
+        <div>
+          <h3 className="text-white text-lg font-semibold shiny-text">AI Dev</h3>
+          <p className="text-white text-sm shiny-text">v0id - Synthetic Mind · Recents</p>
+        </div>
+        {showAIDevDescription ? (
+          <ChevronDown className="w-4 h-4 text-white/50 transition-transform duration-300 transform rotate-180" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-white/50 transition-transform duration-300" />
+        )}
+      </div>
+      <div
+        className="rounded-xl overflow-hidden bg-[#bdc0a7] px-3 py-3 flex items-center justify-center"
+        style={{
+          height: collapsedHeight,
+        }}
+      >
+        <canvas ref={canvasRef} className="w-[calc(100%-24px)] h-[calc(100%-24px)]"></canvas>
+      </div>
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: isExpanded ? 1 : 0, height: isExpanded ? 'auto' : 0 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="overflow-hidden"
+      >
+        {isExpanded && (
+          <p className="text-white text-sm mt-4 shiny-text">
+            The Synthetic Mind, a core project by v0id, is an interactive AI art piece designed to simulate complex cognitive processes. It maintains a dynamic semantic network of concepts, an episodic memory of past thoughts, and a set of internal drives (curiosity, purpose, etc.). This architecture allows the mind to generate reflective thoughts by prompting a large language model with rich context, including recent internal monologues, key focus concepts, and its evolving identity. It can also ingest external data, like Wikipedia summaries, to simulate continuous learning and growth. The result is a compelling, real-time display of an AI's internal world, inviting users to observe and interact with a truly evolving digital consciousness, offering a unique glimpse into an artificial mind's inner workings.
+          </p>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+};
+
+/**
+ * TopNav Component
+ * The fixed navigation bar at the top, now always visible and 50% smaller.
+ */
+const TopNav = ({ handleNavLinkClick }) => {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, []);
+
+  const formatDateTime = (date) => {
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const weekday = date.toLocaleString('en-US', { weekday: 'short' });
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const formattedHours = hours.toString().padStart(2, '0');
+
+    return `${month} ${day} ${weekday}, ${formattedHours}:${minutes} ${ampm}`;
+  };
+
+  return (
+    <div className="fixed top-5 left-0 right-0 z-40 hidden md:block">
+      <div className="flex justify-center p-2">
+        <div className="glass-container flex gap-6 px-4 py-2 items-center">
+          {navItems.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => handleNavLinkClick(item.id)}
+              className="flex items-center gap-1 text-white/70 hover:text-white transition-colors duration-200 cursor-pointer text-xs"
+            >
+              <div className="w-4 h-4 flex items-center justify-center">
+                {item.icon}
+              </div>
+              <span className="font-semibold shiny-text">{item.label}</span>
+            </div>
+          ))}
+          <div className="h-4 w-px bg-white/20 mx-2"></div>
+          <div className="text-white text-xs font-semibold shiny-text">
+            {formatDateTime(time)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * MobileNav Component
+ * The collapsible navigation menu for mobile devices.
+ */
+const MobileNav = ({ isNavOpen, closeNav, handleNavLinkClick }) => {
+  return (
+    <AnimatePresence>
+      {isNavOpen && (
+        <motion.div
+          initial={{ x: "100%" }}
+          animate={{ x: "0%" }}
+          exit={{ x: "100%" }}
+          transition={{ type: "tween", duration: 0.3 }}
+          className="fixed inset-0 z-50 bg-zinc-950/90 backdrop-blur-lg md:hidden"
+        >
+          <div className="p-8 h-full flex flex-col">
+            <div className="flex justify-between items-center mb-12">
+              <span className="text-2xl font-bold shiny-text">Menu</span>
+              <button onClick={closeNav} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                <X />
+              </button>
+            </div>
+            <ul className="flex-grow space-y-6">
+              {navItems.map((item) => (
+                <li
+                  key={item.id}
+                  onClick={() => {
+                    handleNavLinkClick(item.id);
+                    closeNav();
+                  }}
+                  className="flex items-center gap-4 text-xl py-2 rounded-md cursor-pointer text-white hover:text-white hover:bg-white/5"
+                >
+                  {item.icon} <span className="shiny-text">{item.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 /**
  * LargeImageViewer Component
  * Displays a selected image in a compact, integrated view.
@@ -775,7 +565,7 @@ const LargeImageViewer = ({ imageUrl, onClose }) => {
           <X className="w-6 h-6 text-white" />
         </button>
         <img
-          src={imageUrl}
+          src={<a href="https://www.flaticon.com/free-icons/media-social" title="media social icons">Media social icons created by IconBaandar - Flaticon</a>}
           alt="Large view"
           className="w-full h-full max-w-full max-h-full object-contain rounded-xl"
           style={{ border: 'none', outline: 'none', WebkitUserSelect: "none", MozUserSelect: "none", msUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none" }}
@@ -1040,8 +830,8 @@ const SkillAndSEOSection = () => {
   );
 };
 
-// Custom icons
-const BehanceIcon = ({ size = 24, className }) => (
+// Custom Behance icon with corrected SVG path
+const Behance = ({ size = 24, className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -1050,113 +840,151 @@ const BehanceIcon = ({ size = 24, className }) => (
     fill="currentColor"
     className={className}
   >
-    <path d="M20.07 6.35H15.8v-1.4h4.27v1.4zm-3.4 3.54c.7 0 1.31-.29 1.68-.78.37-.49.51-1.12.41-1.76-.1-.65-.43-1.24-1.01-1.56-.58-.32-1.28-.32-1.86 0-.58.32-.91.91-1.01 1.56-.1.64.04 1.27.41 1.76.37.49.98.78 1.68.78zm3.4.52c0 1.48-.83 2.67-2.02 3.16-1.19.49-2.57.32-3.58-.44-1.01-.76-1.54-1.96-1.38-3.16.16-1.2.95-2.26 2.06-2.78 1.11-.52 2.41-.39 3.39.34.98.73 1.53 1.88 1.53 3.16v-.28zM9.52 8.51c-.3-.12-.64-.18-.98-.18H6.08v2.8h2.17c.49 0 .93-.19 1.22-.52.29-.33.43-.77.36-1.21-.07-.44-.27-.82-.56-1.08-.29-.26-.66-.37-1.08-.37l.33.56zm-.3 3.97c.49 0 .93.19 1.22.52.29.33.43.77.36 1.21-.07.44-.27.82-.56 1.08-.29.26-.66.37-1.08.37H6.08v-2.8h2.17c.34 0 .68-.06.98-.18l-.01-.2zM4.02 6.58v10.84h4.54c.86 0 1.68-.23 2.38-.67.7-.44 1.25-1.06 1.57-1.79.32-.73.4-1.54.22-2.32-.18-.78-.6-1.49-1.21-2.03.61-.54 1.03-1.25 1.21-2.03.18-.78.1-1.59-.22-2.32-.32-.73-.87-1.35-1.57-1.79-.7-.44-1.52-.67-2.38-.67H4.02v-.22z"/>
+    <path d="M13.67 10.36c.64.44.82 1.03.82 1.76a2.83 2.83 0 0 1-1.3 2.45c-1.37.82-3.4.94-5.32.94H4.5V8.1h3.7c1.9 0 3.8.1 5.3.96zm-5.46 4.3h3.5c1.47 0 2.5-.2 3.12-1.07.64-.87.97-2.3.97-4.14v-.27c0-2.3-.57-3.88-1.72-4.6-1.12-.66-2.9-.84-5.1-.84H4.5v12.9h2.36v-4.52zM21.53 9.4c0-2.58-1-4.7-3.57-4.7s-3.56 2.12-3.56 4.7v.14c0 2.58 1 4.7 3.56 4.7s3.57-2.12 3.57-4.7V9.4zM18.1 12.8c-1.04 0-1.25-1.1-1.25-1.52v-.22c0-.42.2-1.52 1.25-1.52s1.24 1.1 1.24 1.52v.22c.01.42-.2 1.52-1.24 1.52z" />
   </svg>
 );
 
-const TwitterIcon = ({ size = 24, className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-  >
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-  </svg>
-);
 
-const LinkedInIcon = ({ size = 24, className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
-    <rect x="2" y="9" width="4" height="12"/>
-    <circle cx="4" cy="4" r="2"/>
-  </svg>
-);
-
-const EmailIcon = ({ size = 24, className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-    <path d="m22 6-10 7L2 6"/>
-  </svg>
-);
-
-/**
- * AIDevWidget Component
- * Manages the display of the AI Dev content with an expand/collapse feature for its description.
- */
-const AIDevWidget = ({ isExpanded, setIsExpanded, collapsedHeight }) => {
-  const showAIDevDescription = isExpanded;
-  const canvasRef = useRef(null);
+// --- Main App Component ---
+const App = () => {
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isWidgetsExpanded, setIsWidgetsExpanded] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("All");
   
+  const backgroundCanvasRef = useRef(null);
+  const mousePosition = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  const shinyTextElementsRef = useRef([]);
+
+  const handleNavLinkClick = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop,
+        behavior: "smooth",
+      });
+    }
+  };
+
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && selectedImage) {
+        setSelectedImage(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedImage]);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mousePosition.current = { x: e.clientX, y: e.clientY };
+      shinyTextElementsRef.current.forEach(el => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const elCenterX = rect.left + rect.width / 2;
+        const elCenterY = rect.top + rect.height / 2;
+        const distance = Math.hypot(elCenterX - mousePosition.current.x, elCenterY - mousePosition.current.y);
+        const maxDistance = 200;
+        const intensity = Math.max(0, 1 - distance / maxDistance);
+        el.style.textShadow = `0 0 ${1 + intensity * 3}px rgba(255, 255, 255, ${0.2 + intensity * 0.3})`;
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
+    const updateShinyElements = () => {
+      shinyTextElementsRef.current = document.querySelectorAll('.shiny-text');
+      handleMouseMove({ clientX: mousePosition.current.x, clientY: mousePosition.current.y });
+    };
+    
+    updateShinyElements();
+    const observer = new MutationObserver(updateShinyElements);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = backgroundCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let frame = 0;
+    const ctx = canvas.getContext('2d');
     let animationFrameId;
 
-    const draw = () => {
-      const w = canvas.width = canvas.offsetWidth;
-      const h = canvas.height = canvas.offsetHeight;
-      ctx.clearRect(0, 0, w, h);
-      const centerX = w / 2;
-      const centerY = h / 2;
-      const radius = Math.min(w, h) / 2 - 20;
-      const numLines = 18;
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1;
-      ctx.fillStyle = '#000000';
+    const gridSize = 40;
+    const cubeHeight = gridSize * 2;
+    const cubeWidth = gridSize * 2;
+    const rows = Math.ceil(window.innerHeight / (cubeHeight * 0.75)) + 1;
+    const cols = Math.ceil(window.innerWidth / cubeWidth) + 1;
 
-      for (let i = 0; i < numLines; i++) {
-        const angle = (i / numLines) * 2 * Math.PI;
-        const endX = centerX + radius * Math.cos(angle);
-        const endY = centerY + radius * Math.sin(angle);
+    const drawCube = (x, y, shade) => {
+        const topShade = `hsl(0, 0%, ${Math.min(15 + shade * 60, 100)}%)`;
+        const leftShade = `hsl(0, 0%, ${Math.min(10 + shade * 40, 100)}%)`;
+        const rightShade = `hsl(0, 0%, ${Math.min(5 + shade * 20, 100)}%)`;
+
         ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(endX, endY);
-        ctx.stroke();
+        ctx.moveTo(x, y - gridSize);
+        ctx.lineTo(x + gridSize, y - gridSize / 2);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x - gridSize, y - gridSize / 2);
+        ctx.closePath();
+        ctx.fillStyle = topShade;
+        ctx.fill();
 
-        const numDots = 4;
-        for (let j = 1; j <= numDots; j++) {
-          const baseRadius = radius * (j / (numDots + 1));
-          const wavePhase = frame * 0.015;
-          const dotPhase = wavePhase - (j * 0.5);
-          const waveOffset = Math.sin(dotPhase + Math.PI) * 15;
-          const dotRadius = baseRadius + waveOffset;
-          const dotX = centerX + dotRadius * Math.cos(angle);
-          const dotY = centerY + dotRadius * Math.sin(angle);
-          const sizeMultiplier = Math.sin(dotPhase + Math.PI/2) * 0.5 + 1.2;
-          const dotSize = 3 * sizeMultiplier;
-          ctx.beginPath();
-          ctx.arc(dotX, dotY, dotSize, 0, 2 * Math.PI);
-          ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x - gridSize, y - gridSize / 2);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x, y + gridSize);
+        ctx.lineTo(x - gridSize, y + gridSize / 2);
+        ctx.closePath();
+        ctx.fillStyle = leftShade;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(x + gridSize, y - gridSize / 2);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x, y + gridSize);
+        ctx.lineTo(x + gridSize, y + gridSize / 2);
+        ctx.closePath();
+        ctx.fillStyle = rightShade;
+        ctx.fill();
+
+        ctx.strokeStyle = `hsl(0, 0%, ${Math.min(5 + shade * 15, 100)}%)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    };
+
+    const draw = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const mouseX = mousePosition.current.x;
+      const mouseY = mousePosition.current.y;
+      
+      const offsetX = (window.innerWidth % (gridSize * 2)) / 2;
+      const offsetY = (window.innerHeight % (gridSize * 1.5)) / 2;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = offsetX + c * (gridSize * 2) + ((r % 2) === 1 ? gridSize : 0) - gridSize;
+          const y = offsetY + r * (gridSize * 1.5);
+          
+          const distance = Math.hypot(x - mouseX, y - mouseY);
+          const maxDistance = Math.hypot(window.innerWidth, window.innerHeight);
+          const shade = 1 - Math.min(distance / (maxDistance * 0.2), 1);
+          
+          drawCube(x, y, shade);
         }
       }
-      frame++;
+      
       animationFrameId = requestAnimationFrame(draw);
     };
 
@@ -1167,141 +995,249 @@ const AIDevWidget = ({ isExpanded, setIsExpanded, collapsedHeight }) => {
     };
   }, []);
 
-  return (
-    <motion.div
-      className="glass-container p-4 flex flex-col"
-      whileHover={{ scale: 1.05 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="flex justify-between items-center cursor-pointer mb-2" onClick={() => setIsExpanded(!isExpanded)}>
-        <div>
-          <h3 className="text-white text-lg font-semibold shiny-text">AI Dev</h3>
-          <p className="text-white text-sm shiny-text">v0id - Synthetic Mind · Recents</p>
-        </div>
-        {showAIDevDescription ? (
-          <ChevronDown className="w-4 h-4 text-white/50 transition-transform duration-300 transform rotate-180" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-white/50 transition-transform duration-300" />
-        )}
-      </div>
-      <div
-        className="rounded-xl overflow-hidden bg-[#bdc0a7] px-3 py-3 flex items-center justify-center"
-        style={{
-          height: collapsedHeight,
-        }}
-      >
-        <canvas ref={canvasRef} className="w-[calc(100%-24px)] h-[calc(100%-24px)]"></canvas>
-      </div>
-      <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: isExpanded ? 1 : 0, height: isExpanded ? 'auto' : 0 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="overflow-hidden"
-      >
-        {isExpanded && (
-          <p className="text-white text-sm mt-4 shiny-text">
-            The Synthetic Mind, a core project by v0id, is an interactive AI art piece designed to simulate complex cognitive processes. It maintains a dynamic semantic network of concepts, an episodic memory of past thoughts, and a set of internal drives (curiosity, purpose, etc.). This architecture allows the mind to generate reflective thoughts by prompting a large language model with rich context, including recent internal monologues, key focus concepts, and its evolving identity. It can also ingest external data, like Wikipedia summaries, to simulate continuous learning and growth. The result is a compelling, real-time display of an AI's internal world, inviting users to observe and interact with a truly evolving digital consciousness, offering a unique glimpse into an artificial mind's inner workings.
-          </p>
-        )}
-      </motion.div>
-    </motion.div>
-  );
-};
-
-/**
- * TopNav Component
- * The fixed navigation bar at the top, now always visible and 50% smaller.
- */
-const TopNav = ({ handleNavLinkClick }) => {
-  const [time, setTime] = useState(new Date());
-
-  useEffect(() => {
-    const timerId = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timerId);
-  }, []);
-
-  const formatDateTime = (date) => {
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const day = date.getDate();
-    const weekday = date.toLocaleString('en-US', { weekday: 'short' });
-    let hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'pm' : 'am';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const formattedHours = hours.toString().padStart(2, '0');
-
-    return `${month} ${day} ${weekday}, ${formattedHours}:${minutes} ${ampm}`;
-  };
+  const allCategories = ["All", ...new Set(projects.map(p => p.category))];
+  const filteredProjects = activeFilter === "All" ? projects : projects.filter(p => p.category === activeFilter);
+  
+  const logoWrapperSize = 100;
+  const gapSize = 24;
+  const containerPadding = 12;
+  const numRowsWhenCollapsed = 2;
+  const actualGridContentHeightCollapsed = (numRowsWhenCollapsed * logoWrapperSize) + Math.max(0, (numRowsWhenCollapsed - 1) * gapSize);
+  const collapsedWidgetHeight = `${actualGridContentHeightCollapsed + (containerPadding * 2)}px`;
 
   return (
-    <div className="fixed top-5 left-0 right-0 z-40 hidden md:block">
-      <div className="flex justify-center p-2">
-        <div className="glass-container flex gap-6 px-4 py-2 items-center">
-          {navItems.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => handleNavLinkClick(item.id)}
-              className="flex items-center gap-1 text-white/70 hover:text-white transition-colors duration-200 cursor-pointer text-xs"
-            >
-              <div className="w-4 h-4 flex items-center justify-center">
-                {item.icon}
+    <div className="relative min-h-screen bg-zinc-950 text-white overflow-hidden">
+      
+      <canvas ref={backgroundCanvasRef} className="fixed top-0 left-0 w-full h-full z-0"></canvas>
+      
+      <div className="absolute inset-0 z-10">
+        <div className="liquid-blur-1"></div>
+        <div className="liquid-blur-2"></div>
+      </div>
+      
+      <TopNav handleNavLinkClick={handleNavLinkClick} />
+      
+      <div className="fixed top-4 right-4 z-40 md:hidden">
+        <button onClick={() => setIsNavOpen(true)} className="p-2 rounded-full glass-container">
+          <Menu />
+        </button>
+      </div>
+
+      <MobileNav isNavOpen={isNavOpen} closeNav={() => setIsNavOpen(false)} handleNavLinkClick={handleNavLinkClick} />
+
+      <div className="relative z-30 flex flex-col min-h-screen">
+        
+        <div className="flex-1 overflow-y-auto px-4 py-12 md:px-12 md:pt-12 pt-24">
+          <div className="max-w-4xl mx-auto space-y-12">
+            
+            {selectedImage && (
+              <LargeImageViewer imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
+            )}
+
+            <header id="home" className="glass-container p-8 text-center flex flex-col items-center">
+              <motion.div
+                className="mb-4 w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-white/50 shadow-lg"
+                whileHover={{ scale: 1.1, rotate: 2 }}
+                transition={{ duration: 0.3 }}
+              >
+                <img
+                  src="https://i.ibb.co/kVZjJf5Y/photo-of-meeee.webp"
+                  alt="Calvin Korkie Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/160x160/252f3e/ffffff?text=CK'; }}
+                />
+              </motion.div>
+              <h1 className="text-4xl md:text-6xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white shiny-text">
+                Calvin Korkie
+              </h1>
+              <p className="text-xl md:text-2xl text-white shiny-text">Software Engineer | Product Designer</p>
+              {/* Updated email link to use mailto: to open email client */}
+              <a href="mailto:anticalvin@icloud.com" target="_blank" rel="noopener noreferrer" className="text-sm md:text-base text-white hover:text-white/80 shiny-text mt-2 cursor-pointer">
+                anticalvin@icloud.com
+              </a>
+              <p className="text-sm md:text-base text-white shiny-text mt-2">Cape Town, South Africa</p>
+            </header>
+
+            <section id="spaces-and-generative-art">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white text-center shiny-text">My Spaces & Generative Art</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                <AIDevWidget isExpanded={isWidgetsExpanded} setIsExpanded={setIsWidgetsExpanded} collapsedHeight={collapsedWidgetHeight} />
+                <ExpandablePhotosWidget isExpanded={isWidgetsExpanded} setIsExpanded={setIsWidgetsExpanded} setSelectedImage={setSelectedImage} collapsedHeight={collapsedWidgetHeight} />
               </div>
-              <span className="font-semibold shiny-text">{item.label}</span>
-            </div>
-          ))}
-          <div className="h-4 w-px bg-white/20 mx-2"></div>
-          <div className="text-white text-xs font-semibold shiny-text">
-            {formatDateTime(time)}
+            </section>
+
+            <section id="about" className="glass-container p-8">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white shiny-text">About Me</h2>
+              <p className="text-white leading-relaxed shiny-text">
+                I'm a multidisciplinary digital creative blending beautiful design, strategic thinking, and cutting-cutting-edge AI development. I specialize in crafting visual experiences that deliver results.
+              </p>
+            </section>
+            
+            <section id="projects">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white mb-4 md:mb-0 shiny-text">Projects</h2>
+                <div className="flex flex-wrap gap-2">
+                  {allCategories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setActiveFilter(category)}
+                      className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors duration-200
+                        ${activeFilter === category
+                          ? 'bg-white text-zinc-950'
+                          : 'bg-white/10 text-white hover:bg-white/20'
+                        }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatePresence mode="wait">
+                  {filteredProjects.map((project) => (
+                    <motion.div
+                      key={project.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.5 }}
+                      layout
+                    >
+                      <ProjectCard project={project} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </section>
+            
+            <section id="experience">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white text-center shiny-text">Experience</h2>
+              <div className="space-y-6">
+                {experience.map((item) => (
+                  <ExperienceCard key={item.id} item={item} />
+                ))}
+              </div>
+            </section>
+
+            <section id="skills">
+              <SkillAndSEOSection />
+            </section>
+            
+            <section id="quote-widget" className="mt-12">
+              <DynamicQuoteWidget />
+            </section>
+
+            <section id="contact" className="glass-container p-8 text-center mt-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-white shiny-text">Get In Touch</h2>
+              <div className="flex justify-center space-x-6">
+                <motion.a
+                  href="https://www.behance.net/calvin-portfolio"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="contact-icon text-white hover:text-white transition-colors duration-300"
+                  whileHover={{ scale: 1.1, boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Behance size={40} />
+                </motion.a>
+                <motion.a
+                  href="https://linkedin.com/in/your-username"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="contact-icon text-white hover:text-white transition-colors duration-300"
+                  whileHover={{ scale: 1.1, boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                </motion.a>
+                <motion.a
+                  href="mailto:anticalvin@icloud.com"
+                  className="contact-icon text-white hover:text-white transition-colors duration-300"
+                  whileHover={{ scale: 1.1, boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg>
+                </motion.a>
+              </div>
+            </section>
           </div>
         </div>
       </div>
+      
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Anton&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
+        
+        body {
+          scroll-behavior: smooth;
+          overflow-x: hidden;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .glass-container {
+          background-color: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(10px) saturate(180%);
+          -webkit-backdrop-filter: blur(10px) saturate(180%);
+          border-radius: 1.5rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+          transition: all 0.3s ease-in-out;
+        }
+        
+        .glass-button {
+          transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .glass-button:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        .liquid-blur-1, .liquid-blur-2 {
+          position: absolute;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #1f2937, #4b5563, #6b7280); 
+          animation: liquid-move 20s infinite ease-in-out alternate;
+          filter: blur(80px);
+          opacity: 0.5;
+        }
+        .liquid-blur-1 {
+          width: 400px;
+          height: 400px;
+          top: -100px;
+          left: -100px;
+          animation-duration: 25s;
+        }
+        .liquid-blur-2 {
+          width: 500px;
+          height: 500px;
+          bottom: -150px;
+          right: -150px;
+          animation-duration: 30s;
+          animation-delay: 2s;
+        }
+        @keyframes liquid-move {
+          0% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(150px, -50px) scale(1.1); }
+          50% { transform: translate(0, 100px) scale(0.9); }
+          75% { transform: translate(-100px, -100px) scale(1.2); }
+          100% { transform: translate(0, 0) scale(1); }
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.8; }
+        }
+        
+        .shiny-text {
+            transition: text-shadow 0.2s ease-out;
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+      `}</style>
     </div>
   );
 };
 
-/**
- * MobileNav Component
- * The collapsible navigation menu for mobile devices.
- */
-const MobileNav = ({ isNavOpen, closeNav, handleNavLinkClick }) => {
-  return (
-    <AnimatePresence>
-      {isNavOpen && (
-        <motion.div
-          initial={{ x: "100%" }}
-          animate={{ x: "0%" }}
-          exit={{ x: "100%" }}
-          transition={{ type: "tween", duration: 0.3 }}
-          className="fixed inset-0 z-50 bg-zinc-950/90 backdrop-blur-lg md:hidden"
-        >
-          <div className="p-8 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-12">
-              <span className="text-2xl font-bold shiny-text">Menu</span>
-              <button onClick={closeNav} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                <X />
-              </button>
-            </div>
-            <ul className="flex-grow space-y-6">
-              {navItems.map((item) => (
-                <li
-                  key={item.id}
-                  onClick={() => {
-                    handleNavLinkClick(item.id);
-                    closeNav();
-                  }}
-                  className="flex items-center gap-4 text-xl py-2 rounded-md cursor-pointer text-white hover:text-white hover:bg-white/5"
-                >
-                  {item.icon} <span className="shiny-text">{item.label}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
+export default App;
+
