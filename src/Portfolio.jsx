@@ -1,3 +1,7 @@
+import React, { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { PenTool, LayoutGrid, Globe, Code, ChevronRight, ChevronDown, X, Menu, Link, Search, FileText, BarChart2, Monitor, Users, Briefcase } from "lucide-react";
+
 // --- Main App Component ---
 const App = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -409,9 +413,7 @@ const App = () => {
   );
 };
 
-export default App;import React, { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { PenTool, LayoutGrid, Globe, Code, ChevronRight, ChevronDown, X, Menu, Link, Search, FileText, BarChart2, Monitor, Users, Briefcase } from "lucide-react";
+export default App;
 
 // --- Data for all sections ---
 const navItems = [
@@ -747,6 +749,7 @@ const ExpandablePhotosWidget = ({ isExpanded, setIsExpanded, setSelectedImage, c
       )}
     </motion.div>
   );
+};
 /**
  * LargeImageViewer Component
  * Displays a selected image in a compact, integrated view.
